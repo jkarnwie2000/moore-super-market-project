@@ -230,3 +230,4 @@ Required in production: `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL` (your public h
 
 ## Product images
 The sample catalogue ships with generated, on-brand SVG packshots (`client/public/images/products`), so the store looks complete with no external image dependencies. Replace any of them with a real product photo from **Admin → Products → Edit → Upload image**. If you add products to `server/data/catalog.js`, regenerate the artwork with `npm run generate:art --prefix client`.
+# moore-super-market-project
