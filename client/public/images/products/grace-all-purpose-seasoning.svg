@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Grace All Purpose Seasoning">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="hsl(110 70% 95%)"/><stop offset="1" stop-color="hsl(140 60% 88%)"/></radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="330" cy="70" r="90" fill="#E2A92B" opacity=".10"/>
+  <circle cx="60" cy="350" r="70" fill="#1F5135" opacity=".07"/>
+  <ellipse cx="200" cy="352" rx="120" ry="14" fill="rgba(29,36,32,.18)"/>
+  
+    <rect x="138" y="84" width="124" height="38" rx="8" fill="hsl(110 55% 28%)"/>
+    <rect x="138" y="96" width="124" height="4" fill="rgba(255,255,255,.25)"/>
+    <path d="M128 128 Q128 118 140 118 H260 Q272 118 272 128 V318 Q272 338 252 338 H148 Q128 338 128 318 Z" fill="hsl(110 55% 40%)"/>
+    <rect x="134" y="150" width="132" height="155" rx="8" fill="#FBF6EC"/>
+    <text x="200" y="172" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" letter-spacing="2" fill="#5B6158">GRACE</text><text x="200" y="196" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-weight="700" font-size="17" fill="#1D2420">Grace All</text><text x="200" y="217" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-weight="700" font-size="17" fill="#1D2420">Purpose</text><text x="200" y="238" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-weight="700" font-size="17" fill="#1D2420">Seasoning</text><rect x="148" y="257" width="10.4" height="6" fill="#1F5135"/><rect x="158.4" y="257" width="10.4" height="6" fill="#E2A92B"/><rect x="168.8" y="257" width="10.4" height="6" fill="#D9692B"/><rect x="179.2" y="257" width="10.4" height="6" fill="#1F5135"/><rect x="189.6" y="257" width="10.4" height="6" fill="#E2A92B"/><rect x="200" y="257" width="10.4" height="6" fill="#1F5135"/><rect x="210.4" y="257" width="10.4" height="6" fill="#E2A92B"/><rect x="220.8" y="257" width="10.4" height="6" fill="#D9692B"/><rect x="231.2" y="257" width="10.4" height="6" fill="#1F5135"/><rect x="241.60000000000002" y="257" width="10.4" height="6" fill="#E2A92B"/><text x="200" y="283" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-size="13" font-weight="700" fill="#1F5135">5.29 oz</text>
+</svg>

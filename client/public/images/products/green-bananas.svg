@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Green Bananas">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="hsl(100 70% 95%)"/><stop offset="1" stop-color="hsl(130 60% 88%)"/></radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="330" cy="70" r="90" fill="#E2A92B" opacity=".10"/>
+  <circle cx="60" cy="350" r="70" fill="#1F5135" opacity=".07"/>
+  <ellipse cx="200" cy="352" rx="120" ry="14" fill="rgba(29,36,32,.18)"/>
+  
+    <ellipse cx="160" cy="150" rx="44" ry="40" fill="hsl(100 55% 40%)"/>
+    <ellipse cx="240" cy="146" rx="46" ry="42" fill="hsl(100 60% 55%)"/>
+    <ellipse cx="200" cy="128" rx="44" ry="40" fill="hsl(100 58% 47%)"/>
+    <path d="M200 92 q10 -22 28 -24" stroke="#2E6B3F" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <ellipse cx="228" cy="70" rx="14" ry="7" fill="#3D8A52" transform="rotate(-25 228 70)"/>
+    <path d="M96 168 H304 L284 336 H116 Z" fill="#8A5A2B"/>
+    <path d="M100 196 H300 M104 230 H296 M108 264 H292 M112 298 H288" stroke="#6E4520" stroke-width="5"/>
+    <rect x="124" y="200" width="152" height="93" rx="10" fill="#FBF6EC" stroke="#E2A92B" stroke-width="3"/>
+    <text x="200" y="218" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" letter-spacing="2" fill="#5B6158">MOORE FRESH</text><text x="200" y="242" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-weight="700" font-size="15" fill="#1D2420">Green Bananas</text><rect x="138" y="259" width="12.4" height="6" fill="#1F5135"/><rect x="150.4" y="259" width="12.4" height="6" fill="#E2A92B"/><rect x="162.8" y="259" width="12.4" height="6" fill="#D9692B"/><rect x="175.2" y="259" width="12.4" height="6" fill="#1F5135"/><rect x="187.6" y="259" width="12.4" height="6" fill="#E2A92B"/><rect x="200" y="259" width="12.4" height="6" fill="#1F5135"/><rect x="212.4" y="259" width="12.4" height="6" fill="#E2A92B"/><rect x="224.8" y="259" width="12.4" height="6" fill="#D9692B"/><rect x="237.2" y="259" width="12.4" height="6" fill="#1F5135"/><rect x="249.60000000000002" y="259" width="12.4" height="6" fill="#E2A92B"/><text x="200" y="285" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-size="13" font-weight="700" fill="#1F5135">Per lb</text>
+</svg>

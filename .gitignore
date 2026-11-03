@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Builds
+client/dist/
+
+# Uploaded product images (runtime data)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+coverage/
+.vscode/
+.idea/
+
+# Vercel
+.vercel

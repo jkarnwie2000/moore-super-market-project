@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Golden Sella Basmati Rice">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="hsl(42 70% 95%)"/><stop offset="1" stop-color="hsl(72 60% 88%)"/></radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="330" cy="70" r="90" fill="#E2A92B" opacity=".10"/>
+  <circle cx="60" cy="350" r="70" fill="#1F5135" opacity=".07"/>
+  <ellipse cx="200" cy="352" rx="120" ry="14" fill="rgba(29,36,32,.18)"/>
+  
+    <path d="M110 120 Q200 92 290 120 L312 330 Q200 356 88 330 Z" fill="hsl(42 55% 40%)"/>
+    <path d="M110 120 Q200 92 290 120 L284 140 Q200 116 116 140 Z" fill="hsl(42 55% 28%)"/>
+    <path d="M150 96 Q200 70 250 96" stroke="hsl(42 55% 28%)" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <rect x="122" y="160" width="156" height="134" rx="10" fill="#FBF6EC"/>
+    <text x="200" y="182" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" letter-spacing="2" fill="#5B6158">TILDA</text><text x="200" y="206" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-weight="700" font-size="17" fill="#1D2420">Golden Sella</text><text x="200" y="227" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-weight="700" font-size="17" fill="#1D2420">Basmati Rice</text><rect x="136" y="246" width="12.8" height="6" fill="#1F5135"/><rect x="148.8" y="246" width="12.8" height="6" fill="#E2A92B"/><rect x="161.6" y="246" width="12.8" height="6" fill="#D9692B"/><rect x="174.4" y="246" width="12.8" height="6" fill="#1F5135"/><rect x="187.2" y="246" width="12.8" height="6" fill="#E2A92B"/><rect x="200" y="246" width="12.8" height="6" fill="#1F5135"/><rect x="212.8" y="246" width="12.8" height="6" fill="#E2A92B"/><rect x="225.60000000000002" y="246" width="12.8" height="6" fill="#D9692B"/><rect x="238.4" y="246" width="12.8" height="6" fill="#1F5135"/><rect x="251.2" y="246" width="12.8" height="6" fill="#E2A92B"/><text x="200" y="272" text-anchor="middle" font-family="'Trebuchet MS', Arial, sans-serif" font-size="13" font-weight="700" fill="#1F5135">10 lb</text>
+</svg>
