@@ -5,6 +5,12 @@ Customers can browse 66 products across 20 categories, search and filter, manage
 **Stripe Checkout**, and track orders. Staff get a role-protected admin dashboard for products, inventory, categories,
 orders and discount codes.
 
+**Live site:** https://moore-supermarket.vercel.app (deployed on Vercel; every push to `main` redeploys automatically)
+
+### Deploying on Vercel
+The repo includes `vercel.json` and a serverless entry point (`api/index.js`). The React app is served as static files and `/api/*` runs the Express API as a Vercel Function. Set these in Vercel → Settings → Environment Variables:
+`MONGODB_URI` (MongoDB Atlas, with network access `0.0.0.0/0`), `JWT_SECRET`, `SEED_ADMIN_PASSWORD`, `AUTO_SEED=true` (loads the sample catalogue into an empty database), `NODEJS_HELPERS=0` (needed for Stripe webhook signatures), plus the Stripe variables. Connect a **Vercel Blob** store (Storage → Blob) for admin image uploads. `CLIENT_URL` defaults to the production domain.
+
 ---
 
 ## Features
