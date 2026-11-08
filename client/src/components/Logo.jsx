@@ -1,9 +1,18 @@
 import { Link } from 'react-router-dom';
+import { scrollToTop } from '../utils/scroll';
 
 /** Moore Supermarket brand mark: a sun-and-market "M" seal with a wordmark. */
 export default function Logo({ inverted = false }) {
   return (
-    <Link to="/" className={`logo ${inverted ? 'logo--inverted' : ''}`} aria-label="Moore Supermarket home">
+    <Link
+      to="/"
+      className={`logo ${inverted ? 'logo--inverted' : ''}`}
+      aria-label="Moore Supermarket home"
+      // Already on the home page (e.g. clicking the footer logo)? Still go back to the top.
+      onClick={(e) => {
+        if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) scrollToTop();
+      }}
+    >
       <svg className="logo__mark" viewBox="0 0 64 64" aria-hidden="true">
         <circle cx="32" cy="32" r="30" fill="#1F5135" />
         <circle cx="32" cy="32" r="25" fill="none" stroke="#E2A92B" strokeWidth="1.5" strokeDasharray="2 3" />

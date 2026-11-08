@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
+import { scrollToTop } from './utils/scroll';
 import { RequireAdmin, RequireAuth } from './components/RouteGuards';
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
@@ -23,10 +24,11 @@ import AdminPromotions from './pages/admin/AdminPromotions';
 import AdminSales from './pages/admin/AdminSales';
 import AdminInventory from './pages/admin/AdminInventory';
 
+/** Every new page opens at the top. (Footer links also scroll up themselves — see Footer.jsx.) */
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    scrollToTop();
   }, [pathname]);
   return null;
 }

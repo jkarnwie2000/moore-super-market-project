@@ -2,6 +2,26 @@ import { Link } from 'react-router-dom';
 import Logo from './Logo';
 import Icon from './Icon';
 import { useStore } from '../context/StoreContext';
+import { scrollToTop } from '../utils/scroll';
+
+/**
+ * Footer links always take you to the top of the page — including links that only change
+ * the shop filter (e.g. a category) or point at the page you're already on, where the
+ * route-level scroll reset wouldn't fire. Ctrl/Cmd/Shift-click (new tab/window) is left alone.
+ */
+function FooterLink({ to, children }) {
+  return (
+    <Link
+      to={to}
+      onClick={(e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        scrollToTop();
+      }}
+    >
+      {children}
+    </Link>
+  );
+}
 
 export default function Footer() {
   const { african, caribbean } = useStore();
@@ -31,7 +51,7 @@ export default function Footer() {
           <ul>
             {african.slice(0, 6).map((c) => (
               <li key={c.id}>
-                <Link to={`/shop?category=${c.slug}`}>{c.name}</Link>
+                <FooterLink to={`/shop?category=${c.slug}`}>{c.name}</FooterLink>
               </li>
             ))}
           </ul>
@@ -41,7 +61,7 @@ export default function Footer() {
           <ul>
             {caribbean.slice(0, 6).map((c) => (
               <li key={c.id}>
-                <Link to={`/shop?category=${c.slug}`}>{c.name}</Link>
+                <FooterLink to={`/shop?category=${c.slug}`}>{c.name}</FooterLink>
               </li>
             ))}
           </ul>
@@ -50,16 +70,16 @@ export default function Footer() {
           <h3>Customer Care</h3>
           <ul>
             <li>
-              <Link to="/account">My account</Link>
+              <FooterLink to="/account">My account</FooterLink>
             </li>
             <li>
-              <Link to="/account?tab=orders">Track an order</Link>
+              <FooterLink to="/account?tab=orders">Track an order</FooterLink>
             </li>
             <li>
-              <Link to="/shop?deals=1">Weekly deals</Link>
+              <FooterLink to="/shop?deals=1">Weekly deals</FooterLink>
             </li>
             <li>
-              <Link to="/cart">Shopping cart</Link>
+              <FooterLink to="/cart">Shopping cart</FooterLink>
             </li>
           </ul>
           <div className="site-footer__secure">
