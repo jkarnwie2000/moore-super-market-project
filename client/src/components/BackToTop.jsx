@@ -10,18 +10,29 @@ const SHOW_AFTER = 400; // px scrolled before the button appears
  */
 export default function BackToTop() {
   const [visible, setVisible] = useState(false);
+  const [lift, setLift] = useState(0);
 
   useEffect(() => {
     let frame = 0;
+    const update = () => {
+      setVisible(window.scrollY > SHOW_AFTER);
+      // When the footer's bottom line (copyright / "Prices and availability subject to change.")
+      // scrolls into view, rise above it so the button never covers that text.
+      const bar = document.querySelector('.site-footer__bottom');
+      const showing = bar ? window.innerHeight - bar.getBoundingClientRect().top : 0;
+      setLift(Math.max(0, Math.round(showing)));
+    };
     const onScroll = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => setVisible(window.scrollY > SHOW_AFTER));
+      frame = requestAnimationFrame(update);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
     };
   }, []);
 
@@ -39,6 +50,7 @@ export default function BackToTop() {
     <button
       type="button"
       className={`back-to-top ${visible ? 'is-visible' : ''}`}
+      style={{ '--btt-lift': `${lift}px` }}
       onClick={goUp}
       aria-label="Back to top"
       title="Back to top"

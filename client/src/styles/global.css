@@ -3409,7 +3409,8 @@ code.code,
 .back-to-top {
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  /* --btt-lift (set by BackToTop.jsx) raises it above the footer's bottom line when that line is on screen */
+  bottom: calc(16px + var(--btt-lift, 0px));
   z-index: 55; /* under menus, drawers, dialogs and toasts */
   width: 52px;
   height: 52px;
@@ -3442,7 +3443,7 @@ code.code,
 @media (min-width: 600px) {
   .back-to-top {
     right: 24px;
-    bottom: 24px;
+    bottom: calc(24px + var(--btt-lift, 0px));
   }
 }
 @media (prefers-reduced-motion: reduce) {
