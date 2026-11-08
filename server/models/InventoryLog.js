@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
  * corrections, damage write-offs and stock returned when a sale is deleted.
  * Product/size names are copied so the history stays readable after a product is deleted.
  */
-const REASONS = ['sale', 'in_store_sale', 'restock', 'adjustment', 'damaged', 'returned', 'order_canceled', 'refunded', 'order_deleted'];
+const REASONS = ['sale', 'restock', 'adjustment', 'damaged', 'returned', 'order_canceled', 'refunded', 'order_deleted'];
 
 const inventoryLogSchema = new mongoose.Schema(
   {

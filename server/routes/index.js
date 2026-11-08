@@ -75,8 +75,6 @@ adminRouter.get('/sales', salesInventory.sales);
 adminRouter.get('/inventory', salesInventory.inventory);
 adminRouter.post('/inventory/adjust', salesInventory.adjust);
 adminRouter.get('/inventory/history', salesInventory.history);
-adminRouter.post('/in-store/quote', salesInventory.inStoreQuote);
-adminRouter.post('/in-store/sales', salesInventory.inStoreSale);
 adminRouter.get('/promotions', admin.listPromotions);
 adminRouter.post('/promotions', admin.createPromotion);
 adminRouter.put('/promotions/:id', admin.updatePromotion);

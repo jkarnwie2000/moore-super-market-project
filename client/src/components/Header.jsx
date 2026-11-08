@@ -116,15 +116,6 @@ export default function Header() {
             <SearchBar />
           </div>
           <div className="header-actions">
-            {isAdmin && (
-              <Link to="/admin" className="header-action header-action--admin">
-                <Icon name="grid" />
-                <span className="header-action__label hide-sm">
-                  <small>Store</small>
-                  <strong>Admin</strong>
-                </span>
-              </Link>
-            )}
             <div className="account-menu" ref={accountRef}>
               {user ? (
                 <>

@@ -87,9 +87,7 @@ function SalesTable({ query, onChanged }) {
         { label: 'Paid', value: (o) => (o.paidAt ? formatDateTime(o.paidAt) : '') },
         { label: 'Customer', value: (o) => `${o.customer.firstName} ${o.customer.lastName}` },
         { label: 'Email', value: (o) => o.customer.email },
-        { label: 'Channel', value: (o) => (o.channel === 'in_store' ? 'In store' : 'Online') },
-        { label: 'Fulfilment', value: (o) => (o.channel === 'in_store' ? 'In store' : o.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery') },
-        { label: 'Paid by', value: (o) => ({ stripe: 'Stripe', cash: 'Cash', card: 'Card', mobile_money: 'Mobile money', other: 'Other' })[o.paymentMethod || 'stripe'] },
+        { label: 'Fulfilment', value: (o) => (o.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery') },
         { label: 'Items', value: (o) => o.items.map((i) => `${i.name} (${i.size}) x${i.quantity}`).join('; ') },
         { label: 'Units', value: (o) => o.items.reduce((n, i) => n + i.quantity, 0) },
         { label: 'Subtotal', value: (o) => o.subtotal.toFixed(2) },
@@ -182,7 +180,7 @@ function SalesTable({ query, onChanged }) {
                   </td>
                   <td>
                     {o.customer.firstName} {o.customer.lastName}
-                    <small className="muted block">{o.channel === 'in_store' ? 'In store' : o.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery'}</small>
+                    <small className="muted block">{o.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery'}</small>
                   </td>
                   <td>{o.items.reduce((n, i) => n + i.quantity, 0)}</td>
                   <td>
@@ -402,17 +400,7 @@ export default function AdminSales() {
                 />
               </section>
               <section className="card">
-                <h2>Online vs in store</h2>
-                <BarList
-                  rows={data.byChannel}
-                  valueOf={(r) => r.revenue}
-                  labelOf={(r) => (r.channel === 'in_store' ? 'In-store sales' : 'Online orders')}
-                  formatValue={formatMoney}
-                  detailOf={(r) => `${r.orders} ${r.orders === 1 ? 'sale' : 'sales'}`}
-                />
-              </section>
-              <section className="card">
-                <h2>Online: delivery vs pickup</h2>
+                <h2>Delivery vs pickup</h2>
                 <BarList
                   rows={data.byFulfilment}
                   valueOf={(r) => r.revenue}

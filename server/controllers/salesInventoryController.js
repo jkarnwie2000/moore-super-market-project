@@ -7,7 +7,6 @@ const { str, isObjectId, toInt } = require('../utils/validators');
 const { resolvePeriod } = require('../utils/dates');
 const { salesReport, deleteOrder } = require('../services/salesService');
 const { applyStockChange, setStock } = require('../services/inventoryService');
-const { quoteInStore, createInStoreSale } = require('../services/inStoreService');
 
 /* ------------------------------- Sales ------------------------------- */
 
@@ -170,19 +169,4 @@ async function history(req, res) {
   res.json({ logs: logs.slice(0, limit), hasMore: logs.length > limit });
 }
 
-/* ----------------------------- In-store till ----------------------------- */
-
-/** POST /api/admin/in-store/quote — price a till ticket from the database. */
-async function inStoreQuote(req, res) {
-  const { totals, promotion } = await quoteInStore({ items: req.body.items, promoCode: str(req.body.promoCode, 30) });
-  const { cents, ...rest } = totals;
-  res.json({ totals: rest, promotion: promotion ? { code: promotion.code, description: promotion.description } : null });
-}
-
-/** POST /api/admin/in-store/sales — record a completed in-store sale and take the stock. */
-async function inStoreSale(req, res) {
-  const order = await createInStoreSale(req.body, req.user);
-  res.status(201).json({ order });
-}
-
-module.exports = { sales, deleteOne, deleteMany, inventory, adjust, history, inStoreQuote, inStoreSale };
+module.exports = { sales, deleteOne, deleteMany, inventory, adjust, history };

@@ -24,7 +24,7 @@ const NOTE = {
  *
  * Returns { order, unitsReturned, unitsRestocked, skipped }.
  */
-async function returnUnits(order, lines, { kind, reason = '', note = '', user = null, updateOrder = true, extraSet = {}, refund = 0 }) {
+async function returnUnits(order, lines, { kind, reason = '', note = '', user = null, updateOrder = true, extraSet = {} }) {
   const byVariant = new Map(order.items.map((i) => [String(i.variantId), i]));
   const plan = lines
     .filter((l) => l.quantity > 0)
@@ -47,7 +47,6 @@ async function returnUnits(order, lines, { kind, reason = '', note = '', user = 
     })),
   };
   entry.value = round2(entry.items.reduce((s, i) => s + i.value, 0));
-  entry.refund = round2(refund);
 
   let updated = order;
   if (updateOrder) {
@@ -66,7 +65,7 @@ async function returnUnits(order, lines, { kind, reason = '', note = '', user = 
           items: { $elemMatch: { variantId: l.item.variantId, returnedQuantity: l.item.returnedQuantity ? l.item.returnedQuantity : { $in: [0, null] } } },
         })),
       },
-      { $inc: { ...inc, ...(refund > 0 ? { amountRefunded: round2(refund) } : {}) }, $push: { returns: entry }, ...(Object.keys(extraSet).length ? { $set: extraSet } : {}) },
+      { $inc: inc, $push: { returns: entry }, ...(Object.keys(extraSet).length ? { $set: extraSet } : {}) },
       { arrayFilters, returnDocument: 'after' }
     );
     if (!updated) throw new AppError('This order was just updated by someone else. Refresh and try again.', 409);
@@ -108,18 +107,6 @@ async function releaseRemainingStock(order, { kind, restock = true, user = null,
 }
 
 const RETURN_REASONS = ['customer_return', 'damaged', 'wrong_item', 'expired', 'other'];
-
-/**
- * Money owed back for returned units: their price, less their share of any discount, plus
- * their share of the tax. Never more than what is left of the amount paid.
- */
-function refundDueFor(order, lines) {
-  if (!order.subtotal) return 0;
-  const ratio = (order.subtotal - (order.discount || 0) + (order.tax || 0)) / order.subtotal;
-  const byVariant = new Map(order.items.map((i) => [String(i.variantId), i]));
-  const value = lines.reduce((s, l) => s + (byVariant.get(String(l.variantId))?.unitPrice || 0) * l.quantity, 0);
-  return Math.max(0, Math.min(round2(value * ratio), round2((order.amountPaid || order.total) - (order.amountRefunded || 0))));
-}
 
 /** Validates an admin "record a return" request against what's still returnable on the order. */
 function parseReturnRequest(order, body) {
@@ -202,4 +189,4 @@ async function applyStripeRefund(charge) {
   return Order.findById(order._id);
 }
 
-module.exports = { returnUnits, releaseRemainingStock, parseReturnRequest, applyStripeRefund, refundDueFor, remainingOf, RETURN_REASONS };
+module.exports = { returnUnits, releaseRemainingStock, parseReturnRequest, applyStripeRefund, remainingOf, RETURN_REASONS };

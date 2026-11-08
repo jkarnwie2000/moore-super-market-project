@@ -22,7 +22,7 @@ function generateOrderNumber() {
  * Turns untrusted cart input ([{productId, variantId, quantity}]) into priced order
  * lines using ONLY database prices and stock. Any client-sent price is ignored.
  */
-async function buildLineItems(rawItems, { includeInactive = false } = {}) {
+async function buildLineItems(rawItems) {
   if (!Array.isArray(rawItems) || rawItems.length === 0) throw new AppError('Your cart is empty.', 422);
   if (rawItems.length > MAX_LINES) throw new AppError('Too many items in cart.', 422);
 
@@ -41,8 +41,7 @@ async function buildLineItems(rawItems, { includeInactive = false } = {}) {
   }
 
   const ids = [...new Set([...merged.values()].map((i) => i.productId))];
-  // Staff at the till may sell products that are hidden from the website.
-  const products = await Product.find({ _id: { $in: ids }, ...(includeInactive ? {} : { isActive: true }) });
+  const products = await Product.find({ _id: { $in: ids }, isActive: true });
   const byId = new Map(products.map((p) => [p._id.toString(), p]));
 
   const lines = [];

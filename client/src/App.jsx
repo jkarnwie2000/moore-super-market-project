@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -77,7 +77,6 @@ export default function App() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="sales" element={<AdminSales />} />
             <Route path="inventory" element={<AdminInventory />} />
-            <Route path="in-store" element={<Navigate to="/admin?tab=in-store" replace />} />
             <Route path="promotions" element={<AdminPromotions />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
