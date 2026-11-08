@@ -11,6 +11,7 @@ const PATHS = {
   chevronDown: 'm6 9 6 6 6-6',
   chevronRight: 'm9 6 6 6-6 6',
   arrowRight: 'M5 12h14M13 6l6 6-6 6',
+  arrowUp: 'M12 19V5M6 11l6-6 6 6',
   minus: 'M5 12h14',
   plus: 'M12 5v14M5 12h14',
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',

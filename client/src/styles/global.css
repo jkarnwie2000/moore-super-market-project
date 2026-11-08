@@ -662,7 +662,7 @@ code.code,
 .toasts {
   position: fixed;
   z-index: 80;
-  bottom: 16px;
+  bottom: 80px; /* clear of the back-to-top button */
   left: 16px;
   right: 16px;
   display: grid;
@@ -674,7 +674,7 @@ code.code,
   .toasts {
     left: auto;
     right: 24px;
-    bottom: 24px;
+    bottom: 88px; /* clear of the back-to-top button */
     justify-items: end;
   }
 }
@@ -3403,4 +3403,59 @@ code.code,
 }
 .return-table .link-btn {
   margin-top: 4px;
+}
+
+/* Back-to-top button (every page) */
+.back-to-top {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 55; /* under menus, drawers, dialogs and toasts */
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--white);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.2s, transform 0.2s, visibility 0.2s, background 0.15s, color 0.15s;
+}
+.back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.back-to-top:hover {
+  background: var(--gold);
+  color: var(--green-950);
+}
+.back-to-top:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+@media (min-width: 600px) {
+  .back-to-top {
+    right: 24px;
+    bottom: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: none;
+  }
+}
+@media print {
+  .back-to-top {
+    display: none;
+  }
+}
+/* Focus lands on <main> after "back to top"; no outline box around the whole page. */
+#main:focus {
+  outline: none;
 }

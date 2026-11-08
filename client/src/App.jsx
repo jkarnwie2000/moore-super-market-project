@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import BackToTop from './components/BackToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { scrollToTop } from './utils/scroll';
 import { RequireAdmin, RequireAuth } from './components/RouteGuards';
@@ -84,6 +85,7 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 }
