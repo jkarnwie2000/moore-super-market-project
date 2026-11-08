@@ -45,7 +45,7 @@ The repo includes `vercel.json` and a serverless entry point (`api/index.js`). T
   - **A full refund in the Stripe dashboard** (`charge.refunded` webhook) marks the order refunded. If it hadn't been handed over yet, the order is cancelled and restocked automatically. If it was already completed, or the refund is partial, the order is flagged for review so staff can record what actually came back.
   - Every unit can be put back only once, whether through returns, cancellations, refunds or deleting the sale. Each order shows its returns history, and the Sales report shows returned units and partial refunds.
   - Cancelled and refunded orders don't count as sales.
-- **In-store sale (till)** at `/admin/in-store`, for sales made in the shop:
+- **In-store sale (till)**: a tab on the admin Dashboard (`/admin?tab=in-store`, also in the side menu), for sales made in the shop:
   - Search products (press Enter to add the first match), adjust quantities, and apply an optional discount code. Totals and tax are priced by the server from the database.
   - Take payment by cash, card, mobile money or other. Cash shows change due, with quick-note buttons. Hidden products can still be sold at the till.
   - **Complete sale** takes the stock immediately (logged as "In-store sale") and shows a printable receipt (`IS-…` number). If any item has just run out, nothing is recorded and no stock is taken.

@@ -394,20 +394,21 @@ function RecentSales({ refreshKey }) {
   );
 }
 
-export default function AdminInStore() {
+/** The till, shown as the "In-store sale" tab of the admin dashboard. */
+export function InStorePanel() {
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'recent' ? 'recent' : 'new';
+  const tab = params.get('view') === 'recent' ? 'recent' : 'new';
   const [refreshKey, setRefreshKey] = useState(0);
-  const setTab = (t) => setParams(t === 'recent' ? { tab: 'recent' } : {}, { replace: true });
+  const setTab = (t) => {
+    const next = new URLSearchParams(params);
+    if (t === 'recent') next.set('view', 'recent');
+    else next.delete('view');
+    setParams(next, { replace: true });
+  };
 
   return (
     <div className="stack">
-      <div className="admin__head">
-        <div>
-          <h1>In-store sale</h1>
-          <p className="muted small">Ring up sales made in the shop. Stock is taken off as soon as a sale is completed, and goes back when an item is returned.</p>
-        </div>
-      </div>
+      <p className="muted small">Ring up sales made in the shop. Stock is taken off as soon as a sale is completed, and goes back when an item is returned.</p>
       <div className="seg seg--tabs" role="tablist" aria-label="In-store views">
         <button type="button" role="tab" aria-selected={tab === 'new'} className={`chip ${tab === 'new' ? 'chip--active' : ''}`} onClick={() => setTab('new')}>
           <Icon name="cart" size={16} /> New sale

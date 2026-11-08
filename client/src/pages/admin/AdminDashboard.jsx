@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import Icon from '../../components/Icon';
+import { InStorePanel } from './AdminInStore';
 import { ErrorState, PageLoader, StatusBadge } from '../../components/ui';
 import { useApi } from '../../hooks/useApi';
 import RevenueChart from '../../components/admin/RevenueChart';
 import { formatDateTime, formatMoney } from '../../utils/format';
 
-export default function AdminDashboard() {
+function Overview() {
   const { data, loading, error, reload } = useApi('/admin/stats');
   const sales = useApi('/admin/sales', { range: '30d' });
   if (loading) return <PageLoader />;
@@ -20,12 +22,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="stack">
-      <div className="admin__head">
-        <h1>Dashboard</h1>
-        <Link to="/admin/products/new" className="btn btn--primary">
-          + Add product
-        </Link>
-      </div>
       <div className="stat-grid">
         {tiles.map(([label, value]) => (
           <div key={label} className="stat">
@@ -119,6 +115,47 @@ export default function AdminDashboard() {
             ))}
           </ul>
         </section>
+      </div>
+    </div>
+  );
+}
+
+const TABS = [
+  ['overview', 'Overview', 'grid'],
+  ['in-store', 'In-store sale', 'store'],
+];
+
+export default function AdminDashboard() {
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'in-store' ? 'in-store' : 'overview';
+  const select = (t) => setParams(t === 'overview' ? {} : { tab: t });
+
+  return (
+    <div className="stack">
+      <div className="admin__head">
+        <h1>Dashboard</h1>
+        <Link to="/admin/products/new" className="btn btn--primary">
+          + Add product
+        </Link>
+      </div>
+      <div className="dash-tabs" role="tablist" aria-label="Dashboard sections">
+        {TABS.map(([key, label, icon]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            id={`dash-tab-${key}`}
+            aria-selected={tab === key}
+            aria-controls={`dash-panel-${key}`}
+            className={`dash-tab ${tab === key ? 'is-active' : ''}`}
+            onClick={() => select(key)}
+          >
+            <Icon name={icon} size={18} /> {label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" id={`dash-panel-${tab}`} aria-labelledby={`dash-tab-${tab}`}>
+        {tab === 'in-store' ? <InStorePanel /> : <Overview />}
       </div>
     </div>
   );

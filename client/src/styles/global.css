@@ -3646,3 +3646,37 @@ code.code,
     max-width: none;
   }
 }
+
+/* Dashboard tabs */
+.dash-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--line);
+  overflow-x: auto;
+}
+.dash-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  margin-bottom: -2px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dash-tab:hover {
+  color: var(--ink);
+}
+.dash-tab.is-active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+.dash-tab:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}

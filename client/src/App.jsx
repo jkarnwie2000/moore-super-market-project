@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -22,7 +22,6 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminPromotions from './pages/admin/AdminPromotions';
 import AdminSales from './pages/admin/AdminSales';
 import AdminInventory from './pages/admin/AdminInventory';
-import AdminInStore from './pages/admin/AdminInStore';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -76,7 +75,7 @@ export default function App() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="sales" element={<AdminSales />} />
             <Route path="inventory" element={<AdminInventory />} />
-            <Route path="in-store" element={<AdminInStore />} />
+            <Route path="in-store" element={<Navigate to="/admin?tab=in-store" replace />} />
             <Route path="promotions" element={<AdminPromotions />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
