@@ -37,8 +37,10 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const next = safeNext(params.get('next'));
+  // Staff go straight to the dashboard unless they were sent here from a specific page.
+  const destination = (u) => (u?.role === 'admin' && !params.get('next') ? '/admin' : next);
 
-  if (user) return <Navigate to={next} replace />;
+  if (user) return <Navigate to={destination(user)} replace />;
 
   async function submit(e) {
     e.preventDefault();
@@ -49,8 +51,8 @@ export function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await login(form.email, form.password);
-      navigate(next, { replace: true });
+      const signedIn = await login(form.email, form.password);
+      navigate(destination(signedIn), { replace: true });
     } catch (err) {
       setError(err.message);
       setLoading(false);

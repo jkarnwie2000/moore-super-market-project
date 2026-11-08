@@ -3365,3 +3365,10 @@ code.code,
 .barlist__more {
   margin-top: 10px;
 }
+
+.header-action--admin {
+  color: var(--green);
+}
+.header-action--admin strong {
+  color: var(--green);
+}
