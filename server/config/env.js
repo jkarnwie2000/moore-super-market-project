@@ -29,6 +29,10 @@ const env = {
   deliveryFee: toNumber(process.env.DELIVERY_FEE, 7.99),
   freeDeliveryThreshold: toNumber(process.env.FREE_DELIVERY_THRESHOLD, 75),
   storeAddress: process.env.STORE_ADDRESS || 'Moore Supermarket, 1200 Market Street',
+  // Sales reports group by calendar day in the store's local time zone.
+  storeTimezone: process.env.STORE_TIMEZONE || 'America/New_York',
+  // A product size at or below this many units is flagged "low stock".
+  lowStockThreshold: toNumber(process.env.LOW_STOCK_THRESHOLD, 10),
 };
 
 env.isProduction = env.nodeEnv === 'production';

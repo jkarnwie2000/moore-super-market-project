@@ -29,6 +29,10 @@ const PATHS = {
   filter: 'M4 5h16l-6 7v6l-4 2v-8L4 5Z',
   upload: 'M12 16V4M7 9l5-5 5 5M4 20h16',
   edit: 'M4 20h4L19 9l-4-4L4 16v4Z',
+  chart: 'M3 20h18M6 16v-5M11 16V6M16 16v-8',
+  layers: 'M12 3 3 8l9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5',
+  download: 'M12 4v12M7 11l5 5 5-5M4 20h16',
+  history: 'M3.5 12a8.5 8.5 0 1 0 2.5-6L3.5 8.5M3.5 4v4.5H8M12 7.5V12l3 2',
 };
 
 export default function Icon({ name, size = 20, className = '', strokeWidth = 1.8, title }) {

@@ -6,6 +6,7 @@ const AppError = require('../utils/AppError');
 const { isObjectId, toInt } = require('../utils/validators');
 const { computeTotals } = require('./pricingService');
 const { findValidPromotion } = require('./promotionService');
+const { applyStockChange } = require('./inventoryService');
 
 const MAX_LINE_QTY = 99;
 const MAX_LINES = 60;
@@ -138,11 +139,15 @@ async function markOrderPaid({ orderId, sessionId, paymentIntentId, amountTotalC
   }
 
   for (const item of order.items) {
-    const res = await Product.updateOne(
-      { _id: item.product, variants: { $elemMatch: { _id: item.variantId, stock: { $gte: item.quantity } } } },
-      { $inc: { 'variants.$.stock': -item.quantity, totalStock: -item.quantity, sold: item.quantity } }
-    );
-    if (res.modifiedCount === 0) {
+    const res = await applyStockChange({
+      productId: item.product,
+      variantId: item.variantId,
+      delta: -item.quantity,
+      soldDelta: item.quantity,
+      reason: 'sale',
+      order,
+    });
+    if (!res) {
       reviewReasons.push(`Insufficient stock to fulfil ${item.name} (${item.size}) x${item.quantity}.`);
     }
   }

@@ -10,6 +10,7 @@ const account = require('../controllers/accountController');
 const catalog = require('../controllers/catalogController');
 const checkout = require('../controllers/checkoutController');
 const admin = require('../controllers/adminController');
+const salesInventory = require('../controllers/salesInventoryController');
 
 const router = express.Router();
 
@@ -65,8 +66,14 @@ adminRouter.post('/categories', admin.createCategory);
 adminRouter.put('/categories/:id', admin.updateCategory);
 adminRouter.delete('/categories/:id', admin.deleteCategory);
 adminRouter.get('/orders', admin.listOrders);
+adminRouter.post('/orders/delete', salesInventory.deleteMany);
 adminRouter.get('/orders/:id', admin.getOrder);
 adminRouter.patch('/orders/:id/status', admin.updateOrderStatus);
+adminRouter.delete('/orders/:id', salesInventory.deleteOne);
+adminRouter.get('/sales', salesInventory.sales);
+adminRouter.get('/inventory', salesInventory.inventory);
+adminRouter.post('/inventory/adjust', salesInventory.adjust);
+adminRouter.get('/inventory/history', salesInventory.history);
 adminRouter.get('/promotions', admin.listPromotions);
 adminRouter.post('/promotions', admin.createPromotion);
 adminRouter.put('/promotions/:id', admin.updatePromotion);

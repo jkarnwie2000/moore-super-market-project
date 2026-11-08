@@ -30,10 +30,14 @@ The repo includes `vercel.json` and a serverless entry point (`api/index.js`). T
 - Checkout pre-fills from your default address
 
 **Admin** (`/admin`, `admin` role only; enforced on every API route)
-- Dashboard: revenue, paid orders, orders awaiting fulfilment, low stock, recent orders
+- Dashboard: revenue, paid orders, orders awaiting fulfilment, a 30-day sales chart, low stock, recent orders
+- **Sales**: report for the last 7 / 30 / 90 days, 12 months, year to date or any custom dates. It shows gross sales, orders, average order, items sold, net product sales and discounts, each compared with the previous period of the same length. It also has a sales-per-day (or per-month) chart, with hover and keyboard tooltips and a table view, plus top products, sales by category and delivery vs pickup. Days are counted in the store's time zone (`STORE_TIMEZONE`). Includes a list of the period's sales (or all orders) with CSV export.
+- **Deleting sales**: delete one order or select several. For paid orders you choose whether to return the items to stock. Unpaid orders still open in Stripe Checkout are closed first, so they can't be paid after deletion. Deleting never refunds the customer; refunds are made in the Stripe dashboard.
+- **Inventory**: every product size with stock, an Out/Low/OK status, units sold in the last 30 days, estimated days of stock left and stock value. Search, filter by status or category, sort, and export to CSV. **Add stock** (restock, customer return), **remove stock** (damaged/expired) or **set an exact count**, with a reason and note. Stock can never go negative.
+- **Stock history**: every change is logged with who made it, why, and the stock level afterwards. That covers sales, restocks, corrections, write-offs, deleted sales and edits on the product form. You can view it for the whole store or for one item. Stock updates are atomic, so a sale that happens during an edit is never lost.
 - Products: create, edit and delete; image upload (JPG, PNG or WEBP up to 3 MB); multiple sizes per product with price, original price (for sale pricing) and stock; inline price and stock editing; visibility, featured and best-seller flags
 - Categories: create, edit and delete. A category that still has products can't be deleted.
-- Orders: search and filter by payment status and order status; detail drawer; status updates (processing → ready for pickup / out for delivery → completed); flags for orders that need review
+- Orders: search and filter by payment status, order status and date; detail drawer; status updates (processing → ready for pickup / out for delivery → completed); delete; flags for orders that need review
 - Promotions: percent or fixed-amount codes with minimum order, usage limit, expiry and an active toggle
 
 **Payments (Stripe)**
@@ -72,7 +76,7 @@ moore-supermarket/
 │       ├── context/            StoreContext, AuthContext, CartContext, ToastContext
 │       ├── hooks/              useApi, useDocumentTitle
 │       ├── pages/              Home, Shop, Product, Cart, Checkout, OrderConfirmation, Auth, Account
-│       │   └── admin/          Dashboard, Products, ProductForm, Categories, Orders, Promotions
+│       │   └── admin/          Dashboard, Sales, Orders, Inventory, Products, ProductForm, Categories, Promotions
 │       ├── services/api.js     fetch wrapper
 │       ├── styles/global.css   design system
 │       ├── utils/              cart reducer, pricing estimate, validation, formatting
@@ -81,7 +85,7 @@ moore-supermarket/
 │       └── main.jsx
 ├── server/                     Express API
 │   ├── config/                 env, db, stripe
-│   ├── controllers/            auth, account, catalog, checkout, webhook, admin
+│   ├── controllers/            auth, account, catalog, checkout, webhook, admin, salesInventory
 │   ├── data/                   catalog.js (sample data), seed.js
 │   ├── middleware/             auth, sanitize, upload, rateLimit, errorHandler
 │   ├── models/                 User, Product, Category, Order, Promotion, ProcessedEvent, Subscriber
@@ -130,6 +134,8 @@ Edit `.env` in the project root:
 | `PORT` | no | API port (default `5000`) |
 | `JWT_SECRET` | production | Long random string. Generate one with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `TAX_RATE`, `DELIVERY_FEE`, `FREE_DELIVERY_THRESHOLD`, `CURRENCY`, `STORE_ADDRESS` | no | Store pricing (defaults: 7%, $7.99, free over $75, USD) |
+| `STORE_TIMEZONE` | no | Time zone used to group sales by day (default `America/New_York`) |
+| `LOW_STOCK_THRESHOLD` | no | A product size at or below this many units is "low stock" (default `10`) |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | no | Admin account created by `npm run seed` |
 
 > 🔒 Never commit `.env`. It is already in `.gitignore`. Stripe secret keys are only read on the server.
@@ -210,7 +216,7 @@ npm test --prefix server    # 26 API tests (in-memory MongoDB, mocked Stripe net
 npm test --prefix client    # 13 UI/logic tests (Vitest + jsdom)
 ```
 
-Backend tests cover: search, filters and sorting; product details; register, login and logout; NoSQL-injection attempts; admin authorisation (401/403); address management; admin product CRUD and inventory; promo validation; checkout validation; stock limits; **checkout sessions built from database prices even when the request contains tampered prices**; **real Stripe webhook signature verification**; payment → order paid → inventory reduced; duplicate and retried webhooks not double-counting; confirmation-page reconciliation; cancel and expire handling; order history; and admin status updates.
+Backend tests cover: search, filters and sorting; product details; register, login and logout; NoSQL-injection attempts; admin authorisation (401/403); address management; admin product CRUD and inventory; promo validation; checkout validation; stock limits; **checkout sessions built from database prices even when the request contains tampered prices**; **real Stripe webhook signature verification**; payment → order paid → inventory reduced; duplicate and retried webhooks not double-counting; confirmation-page reconciliation; cancel and expire handling; order history; admin status updates; sales reports (paid-only totals, previous-period comparison, store-time-zone days, DST-safe date maths); deleting sales with and without restocking, closing open Stripe checkouts first and refusing to delete an order whose payment just completed; and atomic, validated, logged stock add / remove / set.
 
 Frontend tests cover: the cart reducer (stock caps, merging, server sync), add-to-cart and the live count, localStorage persistence, quantity buttons and line and order totals on the cart page, pricing estimates matching the server, and checkout validation.
 

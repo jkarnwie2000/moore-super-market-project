@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Icon from '../../components/Icon';
+import DeleteSalesDialog from '../../components/admin/DeleteSalesDialog';
 import { EmptyState, ErrorState, PageLoader, StatusBadge } from '../../components/ui';
 import { useApi } from '../../hooks/useApi';
 import { useToast } from '../../context/ToastContext';
@@ -14,6 +15,7 @@ function OrderDetail({ id, onClose, onUpdated }) {
   const { data, loading, error } = useApi(`/admin/orders/${id}`);
   const [order, setOrder] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { notify } = useToast();
   useEffect(() => {
     if (data) setOrder(data.order);
@@ -148,6 +150,21 @@ function OrderDetail({ id, onClose, onUpdated }) {
                   </div>
                 )}
               </dl>
+              <div className="danger-zone">
+                <button type="button" className="btn btn--danger-outline btn--sm" onClick={() => setConfirmDelete(true)}>
+                  <Icon name="trash" size={16} /> Delete this order
+                </button>
+              </div>
+              {confirmDelete && (
+                <DeleteSalesDialog
+                  orders={[order]}
+                  onClose={() => setConfirmDelete(false)}
+                  onDeleted={() => {
+                    onUpdated();
+                    onClose();
+                  }}
+                />
+              )}
             </>
           )}
         </div>

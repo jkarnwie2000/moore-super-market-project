@@ -6,6 +6,10 @@ const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const { str, isObjectId, slugify, toMoney, toInt, escapeRegex } = require('../utils/validators');
 const { storeImage, removeImage } = require('../middleware/upload');
+const InventoryLog = require('../models/InventoryLog');
+const env = require('../config/env');
+const { setStock } = require('../services/inventoryService');
+const { isDateString, startOfLocalDay, addDays } = require('../utils/dates');
 
 /* ----------------------------- Dashboard ----------------------------- */
 
@@ -15,7 +19,7 @@ async function stats(_req, res) {
     Order.countDocuments({ paymentStatus: 'paid' }),
     Order.countDocuments({ paymentStatus: 'paid', status: { $in: ['processing', 'ready_for_pickup', 'out_for_delivery'] } }),
     Product.countDocuments(),
-    Product.find({ totalStock: { $lte: 10 } }).sort({ totalStock: 1 }).limit(8).select('name slug totalStock variants image'),
+    Product.find({ totalStock: { $lte: env.lowStockThreshold } }).sort({ totalStock: 1 }).limit(8).select('name slug totalStock variants image'),
     User.countDocuments({ role: 'customer' }),
     Order.find().sort({ createdAt: -1 }).limit(8),
   ]);
@@ -128,28 +132,53 @@ async function updateProduct(req, res) {
   if (!product) throw new AppError('Product not found.', 404);
   const data = await parseProductInput(req.body, product);
   if (data.name !== product.name) product.slug = await uniqueSlug(data.name, product._id);
+  const stockBefore = new Map(product.variants.map((v) => [String(v._id), v.stock]));
   product.set(data);
   await product.save();
+  // Record stock changes made through the full edit form in the inventory history.
+  const logs = product.variants
+    .filter((v) => stockBefore.has(String(v._id)) && stockBefore.get(String(v._id)) !== v.stock)
+    .map((v) => ({
+      product: product._id,
+      productName: product.name,
+      variantId: v._id,
+      variantLabel: v.label,
+      change: v.stock - stockBefore.get(String(v._id)),
+      stockAfter: v.stock,
+      reason: 'adjustment',
+      note: 'Edited on the product form',
+      user: req.user._id,
+      userName: req.user.name,
+    }));
+  if (logs.length) await InventoryLog.insertMany(logs);
   res.json({ product });
 }
 
 /** PATCH /api/admin/products/:id/inventory — quick stock/price update for a single size. */
 async function updateInventory(req, res) {
   if (!isObjectId(req.params.id) || !isObjectId(req.body.variantId)) throw new AppError('Product not found.', 404);
-  const product = await Product.findById(req.params.id);
-  const variant = product && product.variants.id(req.body.variantId);
-  if (!variant) throw new AppError('Product size not found.', 404);
+  let product = await Product.findById(req.params.id);
+  if (!product || !product.variants.id(req.body.variantId)) throw new AppError('Product size not found.', 404);
+  let stock;
+  let price;
   if (req.body.stock !== undefined) {
-    const stock = toInt(req.body.stock, { min: 0, max: 100000 });
+    stock = toInt(req.body.stock, { min: 0, max: 100000 });
     if (stock === null) throw new AppError('Stock must be a whole number ≥ 0.', 422);
-    variant.stock = stock;
   }
   if (req.body.price !== undefined) {
-    const price = toMoney(req.body.price);
+    price = toMoney(req.body.price);
     if (price === null || price <= 0) throw new AppError('Enter a valid price.', 422);
-    variant.price = price;
   }
-  await product.save();
+  // Stock goes through the atomic, logged path so it can't overwrite a simultaneous sale.
+  if (stock !== undefined) {
+    const result = await setStock({ productId: product._id, variantId: req.body.variantId, target: stock, note: 'Quick edit on the products list', user: req.user });
+    if (!result) throw new AppError('Stock changed while saving — please try again.', 409);
+    product = result.product;
+  }
+  if (price !== undefined && product.variants.id(req.body.variantId).price !== price) {
+    product.variants.id(req.body.variantId).price = price;
+    await product.save();
+  }
   res.json({ product });
 }
 
@@ -221,7 +250,14 @@ async function listOrders(req, res) {
     const rx = new RegExp(escapeRegex(search), 'i');
     filter.$or = [{ orderNumber: rx }, { 'customer.email': rx }, { 'customer.lastName': rx }];
   }
-  const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(300);
+  // Optional date window (store-local calendar days). Paid orders are dated by payment time.
+  if (isDateString(req.query.from) || isDateString(req.query.to)) {
+    const range = {};
+    if (isDateString(req.query.from)) range.$gte = startOfLocalDay(req.query.from, env.storeTimezone);
+    if (isDateString(req.query.to)) range.$lt = startOfLocalDay(addDays(req.query.to, 1), env.storeTimezone);
+    filter[filter.paymentStatus === 'paid' ? 'paidAt' : 'createdAt'] = range;
+  }
+  const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(500);
   res.json({ orders });
 }
 

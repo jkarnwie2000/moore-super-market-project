@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ErrorState, PageLoader, StatusBadge } from '../../components/ui';
 import { useApi } from '../../hooks/useApi';
+import RevenueChart from '../../components/admin/RevenueChart';
 import { formatDateTime, formatMoney } from '../../utils/format';
 
 export default function AdminDashboard() {
   const { data, loading, error, reload } = useApi('/admin/stats');
+  const sales = useApi('/admin/sales', { range: '30d' });
   if (loading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
@@ -32,6 +34,23 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      <section className="card">
+        <div className="admin__head">
+          <div>
+            <h2>Sales — last 30 days</h2>
+            {sales.data && (
+              <p className="muted small">
+                {formatMoney(sales.data.summary.grossSales)} from {sales.data.summary.orders} {sales.data.summary.orders === 1 ? 'order' : 'orders'}
+              </p>
+            )}
+          </div>
+          <Link to="/admin/sales" className="link-arrow">
+            Sales report →
+          </Link>
+        </div>
+        {sales.data ? <RevenueChart series={sales.data.series} compact /> : sales.error ? <p className="muted small">{sales.error.message}</p> : <PageLoader />}
+      </section>
 
       <div className="admin-two">
         <section className="card">
@@ -86,7 +105,7 @@ export default function AdminDashboard() {
         <section className="card">
           <div className="admin__head">
             <h2>Low stock</h2>
-            <Link to="/admin/products?lowStock=1" className="link-arrow">
+            <Link to="/admin/inventory?status=low" className="link-arrow">
               Manage →
             </Link>
           </div>
