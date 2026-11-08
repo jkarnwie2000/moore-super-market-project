@@ -4,6 +4,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
 const LINKS = [
   ['/admin', 'Dashboard', 'grid', true],
+  ['/admin/in-store', 'In-store sale', 'store'],
   ['/admin/sales', 'Sales', 'chart'],
   ['/admin/orders', 'Orders', 'receipt'],
   ['/admin/inventory', 'Inventory', 'layers'],

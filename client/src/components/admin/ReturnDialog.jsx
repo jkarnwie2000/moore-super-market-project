@@ -21,6 +21,8 @@ export default function ReturnDialog({ order, onClose, onSaved }) {
   const [lines, setLines] = useState(() => Object.fromEntries(returnable.map((i) => [i.variantId, { quantity: 0, restock: true }])));
   const [reason, setReason] = useState('customer_return');
   const [note, setNote] = useState('');
+  const inStore = order.channel === 'in_store';
+  const [refund, setRefund] = useState(inStore);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const { notify } = useToast();
@@ -30,6 +32,10 @@ export default function ReturnDialog({ order, onClose, onSaved }) {
   const units = chosen.reduce((s, i) => s + lines[i.variantId].quantity, 0);
   const restockUnits = chosen.filter((i) => lines[i.variantId].restock).reduce((s, i) => s + lines[i.variantId].quantity, 0);
   const value = chosen.reduce((s, i) => s + lines[i.variantId].quantity * i.unitPrice, 0);
+  // Same formula as the server: item price, less its share of any discount, plus its share of tax.
+  const ratio = order.subtotal ? (order.subtotal - (order.discount || 0) + (order.tax || 0)) / order.subtotal : 0;
+  const refundLeft = Math.max(0, (order.amountPaid || order.total) - (order.amountRefunded || 0));
+  const refundDue = Math.min(Math.round(value * ratio * 100) / 100, Math.round(refundLeft * 100) / 100);
 
   function pickReason(r) {
     setReason(r);
@@ -47,9 +53,11 @@ export default function ReturnDialog({ order, onClose, onSaved }) {
         items: chosen.map((i) => ({ variantId: i.variantId, quantity: lines[i.variantId].quantity, restock: lines[i.variantId].restock })),
         reason,
         note,
+        refund: inStore ? refund : undefined,
       });
       const parts = [`Return recorded: ${res.unitsReturned} ${res.unitsReturned === 1 ? 'item' : 'items'}`];
       parts.push(res.unitsRestocked ? `${res.unitsRestocked} back in stock` : 'none restocked');
+      if (res.refund > 0) parts.push(`give the customer ${formatMoney(res.refund)}`);
       notify(parts.join(' · '));
       if (res.skipped.length) notify(`Not restocked (product no longer exists): ${res.skipped.join(', ')}`, { type: 'error' });
       onSaved(res.order);
@@ -143,8 +151,18 @@ export default function ReturnDialog({ order, onClose, onSaved }) {
             {units - restockUnits > 0 && `, ${units - restockUnits} written off`}
           </p>
         )}
-        {order.paymentStatus === 'paid' && (
-          <p className="muted small">Recording a return doesn't refund the customer. If they're owed money, refund it in your Stripe dashboard.</p>
+        {inStore ? (
+          <label className="checkbox till-refund">
+            <input type="checkbox" checked={refund} onChange={(e) => setRefund(e.target.checked)} />
+            <span>
+              Refund the customer now at the till{units > 0 && refund ? ` — give back ${formatMoney(refundDue)}` : ''}
+              <small className="muted block">Untick for an exchange or store credit. Paid by {order.paymentMethod === 'mobile_money' ? 'mobile money' : order.paymentMethod}.</small>
+            </span>
+          </label>
+        ) : (
+          order.paymentStatus === 'paid' && (
+            <p className="muted small">Recording a return doesn't refund the customer. If they're owed money, refund it in your Stripe dashboard.</p>
+          )
         )}
         {error && (
           <div className="alert alert--error" role="alert">

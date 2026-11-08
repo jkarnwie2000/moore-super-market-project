@@ -42,7 +42,8 @@ export function isoDay(date = new Date()) {
 }
 
 export const REASON_LABELS = {
-  sale: 'Sale',
+  sale: 'Online sale',
+  in_store_sale: 'In-store sale',
   restock: 'Restock',
   adjustment: 'Adjustment',
   damaged: 'Damaged / expired',

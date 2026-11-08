@@ -4,6 +4,7 @@ import Icon from '../../components/Icon';
 import DeleteSalesDialog from '../../components/admin/DeleteSalesDialog';
 import ReturnDialog, { RETURN_REASONS } from '../../components/admin/ReturnDialog';
 import Modal from '../../components/admin/Modal';
+import { PAYMENT_LABELS } from '../../components/admin/Receipt';
 import { EmptyState, ErrorState, PageLoader, StatusBadge } from '../../components/ui';
 import { useApi } from '../../hooks/useApi';
 import { useToast } from '../../context/ToastContext';
@@ -106,14 +107,32 @@ function OrderDetail({ id, onClose, onUpdated }) {
                   <dt>Paid</dt>
                   <dd>{order.paidAt ? formatDateTime(order.paidAt) : '—'}</dd>
                 </div>
-                <div>
-                  <dt>Fulfilment</dt>
-                  <dd>{order.deliveryMethod === 'pickup' ? 'Store pickup' : 'Home delivery'}</dd>
-                </div>
-                <div>
-                  <dt>Stripe payment</dt>
-                  <dd className="mono">{order.stripePaymentIntentId || '—'}</dd>
-                </div>
+                {order.channel === 'in_store' ? (
+                  <>
+                    <div>
+                      <dt>Sold</dt>
+                      <dd>In store{order.soldBy ? ` by ${order.soldBy}` : ''}</dd>
+                    </div>
+                    <div>
+                      <dt>Paid by</dt>
+                      <dd>
+                        {PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod}
+                        {order.changeGiven > 0 && ` (${formatMoney(order.amountTendered)} received, ${formatMoney(order.changeGiven)} change)`}
+                      </dd>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <dt>Fulfilment</dt>
+                      <dd>{order.deliveryMethod === 'pickup' ? 'Store pickup' : 'Home delivery'}</dd>
+                    </div>
+                    <div>
+                      <dt>Stripe payment</dt>
+                      <dd className="mono">{order.stripePaymentIntentId || '—'}</dd>
+                    </div>
+                  </>
+                )}
               </dl>
               <div>
                 <h3>Customer</h3>
@@ -204,7 +223,7 @@ function OrderDetail({ id, onClose, onUpdated }) {
                 )}
                 {order.amountRefunded > 0 && (
                   <div>
-                    <dt>Refunded in Stripe</dt>
+                    <dt>{order.channel === 'in_store' ? 'Refunded at the till' : 'Refunded in Stripe'}</dt>
                     <dd>−{formatMoney(order.amountRefunded)}</dd>
                   </div>
                 )}
@@ -267,7 +286,11 @@ function OrderDetail({ id, onClose, onUpdated }) {
                       </label>
                     )}
                     <div className="alert alert--warning">
-                      <span>Cancelling doesn't refund the customer. Refund the payment in your Stripe dashboard. If you refund in Stripe first, the order is cancelled and restocked automatically.</span>
+                      <span>
+                        {order.channel === 'in_store'
+                          ? "Cancelling doesn't record a refund. To give money back for items brought back, use \"Record a return\" instead."
+                          : "Cancelling doesn't refund the customer. Refund the payment in your Stripe dashboard. If you refund in Stripe first, the order is cancelled and restocked automatically."}
+                      </span>
                     </div>
                   </div>
                 </Modal>
@@ -283,7 +306,7 @@ function OrderDetail({ id, onClose, onUpdated }) {
 export default function AdminOrders() {
   const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState(params.get('q') || '');
-  const query = { paymentStatus: params.get('paymentStatus') || '', status: params.get('status') || '', q: params.get('q') || '' };
+  const query = { paymentStatus: params.get('paymentStatus') || '', status: params.get('status') || '', channel: params.get('channel') || '', q: params.get('q') || '' };
   const { data, loading, error, reload } = useApi('/admin/orders', query);
   const openId = params.get('open');
 
@@ -318,6 +341,11 @@ export default function AdminOrders() {
               {statusLabel(s)}
             </option>
           ))}
+        </select>
+        <select aria-label="Sales channel" value={query.channel} onChange={(e) => update({ channel: e.target.value })}>
+          <option value="">Online &amp; in store</option>
+          <option value="online">Online only</option>
+          <option value="in_store">In store only</option>
         </select>
         <select aria-label="Order status" value={query.status} onChange={(e) => update({ status: e.target.value })}>
           <option value="">All statuses</option>
@@ -363,7 +391,7 @@ export default function AdminOrders() {
                     {o.customer.firstName} {o.customer.lastName}
                     <small className="muted block">{o.customer.email}</small>
                   </td>
-                  <td>{o.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery'}</td>
+                  <td>{o.channel === 'in_store' ? <span className="pill pill--best">In store</span> : o.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery'}</td>
                   <td>{formatMoney(o.total)}</td>
                   <td>
                     <StatusBadge status={o.paymentStatus} />

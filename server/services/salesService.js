@@ -74,7 +74,7 @@ async function salesReport(period, tz = env.storeTimezone) {
   const bucket = days > 92 ? 'month' : 'day';
   const match = { $match: paidBetween(start, end) };
 
-  const [summary, previous, seriesRows, topProducts, byCategory, byFulfilment] = await Promise.all([
+  const [summary, previous, seriesRows, topProducts, byCategory, byFulfilment, byChannel] = await Promise.all([
     summarise(start, end),
     summarise(prevStart, start),
     Order.aggregate([
@@ -117,6 +117,7 @@ async function salesReport(period, tz = env.storeTimezone) {
       { $sort: { revenue: -1 } },
     ]),
     Order.aggregate([match, { $group: { _id: '$deliveryMethod', orders: { $sum: 1 }, revenue: { $sum: '$total' } } }]),
+    Order.aggregate([match, { $group: { _id: { $ifNull: ['$channel', 'online'] }, orders: { $sum: 1 }, revenue: { $sum: '$total' } } }]),
   ]);
 
   const byKey = new Map(seriesRows.map((r) => [r._id, r]));
@@ -133,6 +134,10 @@ async function salesReport(period, tz = env.storeTimezone) {
     series,
     topProducts: topProducts.map((p) => ({ productId: p._id, name: p.name, image: p.image, quantity: p.quantity, revenue: round2(p.revenue) })),
     byCategory: byCategory.map((c) => ({ name: c._id, quantity: c.quantity, revenue: round2(c.revenue) })),
+    byChannel: ['online', 'in_store'].map((c) => {
+      const row = byChannel.find((r) => r._id === c);
+      return { channel: c, orders: row ? row.orders : 0, revenue: round2(row && row.revenue) };
+    }),
     byFulfilment: ['delivery', 'pickup'].map((m) => {
       const row = byFulfilment.find((r) => r._id === m);
       return { method: m, orders: row ? row.orders : 0, revenue: round2(row && row.revenue) };

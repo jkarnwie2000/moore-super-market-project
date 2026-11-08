@@ -9,7 +9,7 @@ const { storeImage, removeImage } = require('../middleware/upload');
 const InventoryLog = require('../models/InventoryLog');
 const env = require('../config/env');
 const { setStock } = require('../services/inventoryService');
-const { returnUnits, releaseRemainingStock, parseReturnRequest } = require('../services/returnsService');
+const { returnUnits, releaseRemainingStock, parseReturnRequest, refundDueFor } = require('../services/returnsService');
 const { isDateString, startOfLocalDay, addDays } = require('../utils/dates');
 
 /* ----------------------------- Dashboard ----------------------------- */
@@ -246,6 +246,7 @@ async function listOrders(req, res) {
   const { paymentStatus, status } = req.query;
   if (Order.PAYMENT_STATUSES.includes(paymentStatus)) filter.paymentStatus = paymentStatus;
   if (Order.ORDER_STATUSES.includes(status)) filter.status = status;
+  if (['online', 'in_store'].includes(req.query.channel)) filter.channel = req.query.channel === 'online' ? { $ne: 'in_store' } : 'in_store';
   // The sales list shows completed sales only: paid and not cancelled.
   else if (req.query.excludeCanceled === '1') filter.status = { $ne: 'canceled' };
   const search = str(req.query.q, 100);
@@ -311,8 +312,16 @@ async function recordReturn(req, res) {
   const order = await Order.findById(req.params.id);
   if (!order) throw new AppError('Order not found.', 404);
   const { lines, reason, note } = parseReturnRequest(order, req.body);
-  const result = await returnUnits(order, lines, { kind: 'return', reason, note, user: req.user });
-  res.status(201).json({ order: result.order, unitsReturned: result.unitsReturned, unitsRestocked: result.unitsRestocked, skipped: result.skipped });
+  // In-store returns can record cash/card handed back at the till. Online refunds happen in Stripe.
+  const refund = order.channel === 'in_store' && req.body.refund !== false ? refundDueFor(order, lines) : 0;
+  const result = await returnUnits(order, lines, { kind: 'return', reason, note, user: req.user, refund });
+  if (refund > 0 && result.order.amountRefunded >= result.order.amountPaid - 0.005) {
+    // Everything paid has been handed back: this is no longer a sale.
+    result.order = await Order.findByIdAndUpdate(order._id, { $set: { paymentStatus: 'refunded', refundedAt: new Date() } }, { returnDocument: 'after' });
+  } else if (refund > 0) {
+    await Order.updateOne({ _id: order._id }, { $set: { refundedAt: new Date() } });
+  }
+  res.status(201).json({ order: result.order, unitsReturned: result.unitsReturned, unitsRestocked: result.unitsRestocked, skipped: result.skipped, refund });
 }
 
 /* ----------------------------- Promotions ----------------------------- */
