@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Icon from '../../components/Icon';
 import DeleteSalesDialog from '../../components/admin/DeleteSalesDialog';
+import ReturnDialog, { RETURN_REASONS } from '../../components/admin/ReturnDialog';
+import Modal from '../../components/admin/Modal';
 import { EmptyState, ErrorState, PageLoader, StatusBadge } from '../../components/ui';
 import { useApi } from '../../hooks/useApi';
 import { useToast } from '../../context/ToastContext';
@@ -16,23 +18,40 @@ function OrderDetail({ id, onClose, onUpdated }) {
   const [order, setOrder] = useState(null);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [returning, setReturning] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelRestock, setCancelRestock] = useState(true);
   const { notify } = useToast();
   useEffect(() => {
     if (data) setOrder(data.order);
   }, [data]);
 
-  async function setStatus(status, resolveReview = false) {
+  async function setStatus(status, resolveReview = false, restock = true) {
     setSaving(true);
     try {
-      const { order: o } = await api.patch(`/admin/orders/${id}/status`, { status, resolveReview });
+      const { order: o, unitsRestocked } = await api.patch(`/admin/orders/${id}/status`, { status, resolveReview, restock });
       setOrder(o);
       onUpdated();
-      notify(`Order ${o.orderNumber} → ${statusLabel(status)}`);
+      notify(`Order ${o.orderNumber} → ${statusLabel(status)}${unitsRestocked ? ` · ${unitsRestocked} ${unitsRestocked === 1 ? 'item' : 'items'} back in stock` : ''}`);
     } catch (err) {
       notify(err.message, { type: 'error' });
     } finally {
       setSaving(false);
     }
+  }
+
+  const unreturned = order ? order.items.reduce((s, i) => s + i.quantity - (i.returnedQuantity || 0), 0) : 0;
+  const canReturn = order && ['paid', 'refunded'].includes(order.paymentStatus) && order.inventoryAdjusted && unreturned > 0;
+  const lockedCanceled = order && order.status === 'canceled' && order.paymentStatus === 'paid' && order.inventoryAdjusted;
+
+  function onStatusChange(status) {
+    // Cancelling a paid order puts stock back, so confirm it first.
+    if (status === 'canceled' && order.paymentStatus === 'paid' && order.status !== 'canceled') {
+      setCancelRestock(true);
+      setConfirmCancel(true);
+      return;
+    }
+    setStatus(status);
   }
 
   return (
@@ -64,14 +83,20 @@ function OrderDetail({ id, onClose, onUpdated }) {
               </div>
               <label className="field">
                 <span className="field__label">Update order status</span>
-                <select value={order.status} disabled={saving} onChange={(e) => setStatus(e.target.value)}>
+                <select value={order.status} disabled={saving || lockedCanceled} onChange={(e) => onStatusChange(e.target.value)}>
                   {ORDER_STATUSES.map((s) => (
                     <option key={s} value={s} disabled={order.paymentStatus !== 'paid' && !['canceled', 'awaiting_payment'].includes(s)}>
                       {statusLabel(s)}
                     </option>
                   ))}
                 </select>
+                {lockedCanceled && <span className="field__hint">Cancelled — its items were returned to stock, so it can't be reopened.</span>}
               </label>
+              {canReturn && (
+                <button type="button" className="btn btn--outline btn--sm" onClick={() => setReturning(true)}>
+                  <Icon name="history" size={16} /> Record a return
+                </button>
+              )}
               <dl className="details">
                 <div>
                   <dt>Placed</dt>
@@ -112,6 +137,12 @@ function OrderDetail({ id, onClose, onUpdated }) {
                         <td>
                           {i.name}
                           <small className="muted block">{i.size}</small>
+                          {i.returnedQuantity > 0 && (
+                            <small className="returned-note block">
+                              {i.returnedQuantity} returned
+                              {i.restockedQuantity > 0 ? ` · ${i.restockedQuantity} restocked` : ' · not restocked'}
+                            </small>
+                          )}
                         </td>
                         <td>× {i.quantity}</td>
                         <td>{formatMoney(i.lineTotal)}</td>
@@ -120,6 +151,28 @@ function OrderDetail({ id, onClose, onUpdated }) {
                   </tbody>
                 </table>
               </div>
+              {order.returns?.length > 0 && (
+                <div>
+                  <h3>Returns &amp; stock changes</h3>
+                  <ul className="return-log">
+                    {[...order.returns].reverse().map((r) => (
+                      <li key={r._id}>
+                        <div className="return-log__head">
+                          <strong>{r.kind === 'refunded' ? 'Refunded in Stripe' : r.kind === 'canceled' ? 'Order cancelled' : RETURN_REASONS[r.reason] || 'Return'}</strong>
+                          <span className="muted small">{formatDateTime(r.createdAt)}</span>
+                        </div>
+                        <span className="small">
+                          {r.items.map((i) => `${i.quantity} × ${i.name} (${i.size})${i.restocked ? '' : ' — not restocked'}`).join('; ')}
+                        </span>
+                        <span className="muted small">
+                          {formatMoney(r.value)} of goods{r.userName ? ` · by ${r.userName}` : ''}
+                          {r.note ? ` · ${r.note}` : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <dl className="totals">
                 <div>
                   <dt>Subtotal</dt>
@@ -143,10 +196,16 @@ function OrderDetail({ id, onClose, onUpdated }) {
                   <dt>Total</dt>
                   <dd>{formatMoney(order.total)}</dd>
                 </div>
-                {order.paymentStatus === 'paid' && (
+                {['paid', 'refunded'].includes(order.paymentStatus) && (
                   <div>
                     <dt>Amount charged</dt>
                     <dd>{formatMoney(order.amountPaid)}</dd>
+                  </div>
+                )}
+                {order.amountRefunded > 0 && (
+                  <div>
+                    <dt>Refunded in Stripe</dt>
+                    <dd>−{formatMoney(order.amountRefunded)}</dd>
                   </div>
                 )}
               </dl>
@@ -164,6 +223,54 @@ function OrderDetail({ id, onClose, onUpdated }) {
                     onClose();
                   }}
                 />
+              )}
+              {returning && (
+                <ReturnDialog
+                  order={order}
+                  onClose={() => setReturning(false)}
+                  onSaved={(o) => {
+                    setReturning(false);
+                    setOrder(o);
+                    onUpdated();
+                  }}
+                />
+              )}
+              {confirmCancel && (
+                <Modal
+                  title={`Cancel ${order.orderNumber}?`}
+                  onClose={() => setConfirmCancel(false)}
+                  footer={
+                    <>
+                      <button type="button" className="btn btn--outline" onClick={() => setConfirmCancel(false)}>
+                        Keep order
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--danger"
+                        disabled={saving}
+                        onClick={async () => {
+                          await setStatus('canceled', false, cancelRestock);
+                          setConfirmCancel(false);
+                        }}
+                      >
+                        Cancel order
+                      </button>
+                    </>
+                  }
+                >
+                  <div className="stack stack--tight">
+                    <p>This order has been paid. Cancelling it can't be undone.</p>
+                    {order.inventoryAdjusted && unreturned > 0 && (
+                      <label className="checkbox">
+                        <input type="checkbox" checked={cancelRestock} onChange={(e) => setCancelRestock(e.target.checked)} />
+                        Put {unreturned} {unreturned === 1 ? 'item' : 'items'} back in stock
+                      </label>
+                    )}
+                    <div className="alert alert--warning">
+                      <span>Cancelling doesn't refund the customer. Refund the payment in your Stripe dashboard. If you refund in Stripe first, the order is cancelled and restocked automatically.</span>
+                    </div>
+                  </div>
+                </Modal>
               )}
             </>
           )}
@@ -249,6 +356,7 @@ export default function AdminOrders() {
                       {o.orderNumber}
                     </button>
                     {o.needsReview && <span className="pill pill--deal">Review</span>}
+                    {o.items.some((i) => i.returnedQuantity > 0) && o.status !== 'canceled' && <span className="pill pill--muted">Returns</span>}
                     <small className="muted block">{formatDateTime(o.createdAt)}</small>
                   </td>
                   <td>

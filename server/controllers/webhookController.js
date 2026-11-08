@@ -2,6 +2,7 @@ const env = require('../config/env');
 const { getStripe } = require('../config/stripe');
 const ProcessedEvent = require('../models/ProcessedEvent');
 const { markOrderPaid, markOrderUnpaidOutcome } = require('../services/orderService');
+const { applyStripeRefund } = require('../services/returnsService');
 
 const paymentIntentId = (session) =>
   typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
@@ -26,6 +27,10 @@ async function handleEvent(event) {
       break;
     case 'checkout.session.expired':
       await markOrderUnpaidOutcome(orderId, 'expired');
+      break;
+    case 'charge.refunded':
+      // Here event.data.object is a Charge, not a Checkout Session.
+      await applyStripeRefund(event.data.object);
       break;
     default:
       // Other event types are acknowledged but not used.

@@ -69,6 +69,7 @@ adminRouter.get('/orders', admin.listOrders);
 adminRouter.post('/orders/delete', salesInventory.deleteMany);
 adminRouter.get('/orders/:id', admin.getOrder);
 adminRouter.patch('/orders/:id/status', admin.updateOrderStatus);
+adminRouter.post('/orders/:id/returns', admin.recordReturn);
 adminRouter.delete('/orders/:id', salesInventory.deleteOne);
 adminRouter.get('/sales', salesInventory.sales);
 adminRouter.get('/inventory', salesInventory.inventory);

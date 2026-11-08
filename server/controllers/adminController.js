@@ -9,14 +9,15 @@ const { storeImage, removeImage } = require('../middleware/upload');
 const InventoryLog = require('../models/InventoryLog');
 const env = require('../config/env');
 const { setStock } = require('../services/inventoryService');
+const { returnUnits, releaseRemainingStock, parseReturnRequest } = require('../services/returnsService');
 const { isDateString, startOfLocalDay, addDays } = require('../utils/dates');
 
 /* ----------------------------- Dashboard ----------------------------- */
 
 async function stats(_req, res) {
   const [revenueAgg, paidOrders, pendingFulfilment, productCount, lowStock, customers, recentOrders] = await Promise.all([
-    Order.aggregate([{ $match: { paymentStatus: 'paid' } }, { $group: { _id: null, revenue: { $sum: '$total' } } }]),
-    Order.countDocuments({ paymentStatus: 'paid' }),
+    Order.aggregate([{ $match: { paymentStatus: 'paid', status: { $ne: 'canceled' } } }, { $group: { _id: null, revenue: { $sum: '$total' } } }]),
+    Order.countDocuments({ paymentStatus: 'paid', status: { $ne: 'canceled' } }),
     Order.countDocuments({ paymentStatus: 'paid', status: { $in: ['processing', 'ready_for_pickup', 'out_for_delivery'] } }),
     Product.countDocuments(),
     Product.find({ totalStock: { $lte: env.lowStockThreshold } }).sort({ totalStock: 1 }).limit(8).select('name slug totalStock variants image'),
@@ -245,6 +246,8 @@ async function listOrders(req, res) {
   const { paymentStatus, status } = req.query;
   if (Order.PAYMENT_STATUSES.includes(paymentStatus)) filter.paymentStatus = paymentStatus;
   if (Order.ORDER_STATUSES.includes(status)) filter.status = status;
+  // The sales list shows completed sales only: paid and not cancelled.
+  else if (req.query.excludeCanceled === '1') filter.status = { $ne: 'canceled' };
   const search = str(req.query.q, 100);
   if (search) {
     const rx = new RegExp(escapeRegex(search), 'i');
@@ -277,12 +280,39 @@ async function updateOrderStatus(req, res) {
   if (order.paymentStatus !== 'paid' && status !== 'canceled' && status !== 'awaiting_payment') {
     throw new AppError('Only paid orders can be moved into fulfilment.', 409);
   }
+  // Stock from a cancelled paid order has already gone back on the shelf, so it can't be reopened.
+  if (order.status === 'canceled' && status !== 'canceled' && order.paymentStatus === 'paid' && order.inventoryAdjusted) {
+    throw new AppError('A cancelled paid order can’t be reopened because its items were returned to stock. Ask the customer to order again.', 409);
+  }
+
+  // Cancelling a paid order puts its items back in stock automatically (unless restock=false).
+  if (status === 'canceled' && order.status !== 'canceled' && order.paymentStatus === 'paid') {
+    const result = await releaseRemainingStock(order, {
+      kind: 'canceled',
+      restock: req.body.restock !== false,
+      user: req.user,
+      extraSet: { status: 'canceled', ...(req.body.resolveReview ? { needsReview: false } : {}) },
+    });
+    const fresh = await Order.findById(order._id);
+    return res.json({ order: fresh, unitsRestocked: result.unitsRestocked, skipped: result.skipped });
+  }
+
   order.status = status;
   if (req.body.resolveReview) {
     order.needsReview = false;
   }
   await order.save();
-  res.json({ order });
+  res.json({ order, unitsRestocked: 0 });
+}
+
+/** POST /api/admin/orders/:id/returns — record items coming back, optionally restocking them. */
+async function recordReturn(req, res) {
+  if (!isObjectId(req.params.id)) throw new AppError('Order not found.', 404);
+  const order = await Order.findById(req.params.id);
+  if (!order) throw new AppError('Order not found.', 404);
+  const { lines, reason, note } = parseReturnRequest(order, req.body);
+  const result = await returnUnits(order, lines, { kind: 'return', reason, note, user: req.user });
+  res.status(201).json({ order: result.order, unitsReturned: result.unitsReturned, unitsRestocked: result.unitsRestocked, skipped: result.skipped });
 }
 
 /* ----------------------------- Promotions ----------------------------- */
@@ -348,6 +378,7 @@ module.exports = {
   listOrders,
   getOrder,
   updateOrderStatus,
+  recordReturn,
   listPromotions,
   createPromotion,
   updatePromotion,

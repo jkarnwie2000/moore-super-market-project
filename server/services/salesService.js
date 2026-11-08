@@ -4,12 +4,13 @@ const AppError = require('../utils/AppError');
 const env = require('../config/env');
 const { getStripe } = require('../config/stripe');
 const { addDays, startOfLocalDay } = require('../utils/dates');
-const { applyStockChange } = require('./inventoryService');
+const { releaseRemainingStock } = require('./returnsService');
 
 const round2 = (n) => Math.round((n || 0) * 100) / 100;
 
-// A sale is a paid order, dated by when payment was received.
-const paidBetween = (start, end) => ({ paymentStatus: 'paid', paidAt: { $gte: start, $lt: end } });
+// A sale is a paid order that wasn't cancelled, dated by when payment was received.
+// (Refunded orders have paymentStatus 'refunded', so they drop out too.)
+const paidBetween = (start, end) => ({ paymentStatus: 'paid', status: { $ne: 'canceled' }, paidAt: { $gte: start, $lt: end } });
 
 async function summarise(start, end) {
   const [row] = await Order.aggregate([
@@ -24,10 +25,17 @@ async function summarise(start, end) {
         tax: { $sum: '$tax' },
         deliveryFees: { $sum: '$deliveryFee' },
         itemsSold: { $sum: { $sum: '$items.quantity' } },
+        returnedUnits: { $sum: { $sum: '$items.returnedQuantity' } },
+        returnsValue: {
+          $sum: {
+            $sum: { $map: { input: '$items', in: { $multiply: [{ $ifNull: ['$$this.returnedQuantity', 0] }, '$$this.unitPrice'] } } },
+          },
+        },
+        refunds: { $sum: { $ifNull: ['$amountRefunded', 0] } },
       },
     },
   ]);
-  const r = row || { orders: 0, grossSales: 0, productSales: 0, discounts: 0, tax: 0, deliveryFees: 0, itemsSold: 0 };
+  const r = row || { orders: 0, grossSales: 0, productSales: 0, discounts: 0, tax: 0, deliveryFees: 0, itemsSold: 0, returnedUnits: 0, returnsValue: 0, refunds: 0 };
   return {
     orders: r.orders,
     grossSales: round2(r.grossSales),
@@ -37,6 +45,10 @@ async function summarise(start, end) {
     deliveryFees: round2(r.deliveryFees),
     itemsSold: r.itemsSold,
     averageOrder: r.orders ? round2(r.grossSales / r.orders) : 0,
+    // Returns recorded against these sales (items back from customers) and partial Stripe refunds.
+    returnedUnits: r.returnedUnits || 0,
+    returnsValue: round2(r.returnsValue),
+    refunds: round2(r.refunds),
   };
 }
 
@@ -168,23 +180,13 @@ async function closeOpenCheckout(order) {
 async function deleteOrder(order, { restock = true, user = null } = {}) {
   await closeOpenCheckout(order);
 
+  // Only units that haven't already been returned, cancelled or refunded go back on the shelf.
   let unitsReturned = 0;
-  const skipped = [];
-  if (restock && order.inventoryAdjusted) {
-    for (const item of order.items) {
-      const res = await applyStockChange({
-        productId: item.product,
-        variantId: item.variantId,
-        delta: item.quantity,
-        soldDelta: -item.quantity,
-        reason: 'order_deleted',
-        note: `Sale ${order.orderNumber} deleted`,
-        order,
-        user,
-      });
-      if (res) unitsReturned += item.quantity;
-      else skipped.push(`${item.name} (${item.size})`);
-    }
+  let skipped = [];
+  if (restock) {
+    const r = await releaseRemainingStock(order, { kind: 'deleted', user, updateOrder: false });
+    unitsReturned = r.unitsRestocked;
+    skipped = r.skipped;
   }
   if (order.paymentStatus === 'paid' && order.promoCode) {
     await Promotion.updateOne({ code: order.promoCode, timesUsed: { $gt: 0 } }, { $inc: { timesUsed: -1 } });

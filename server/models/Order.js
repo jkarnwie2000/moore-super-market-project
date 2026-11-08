@@ -11,8 +11,36 @@ const orderItemSchema = new mongoose.Schema(
     unitPrice: { type: Number, required: true },
     quantity: { type: Number, required: true, min: 1 },
     lineTotal: { type: Number, required: true },
+    // Units no longer with the customer's sale: returned, cancelled or refunded.
+    // `restockedQuantity` is the part of those that went back on the shelf.
+    returnedQuantity: { type: Number, default: 0, min: 0 },
+    restockedQuantity: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
+);
+
+// One entry per return / cancellation / refund that touched the order's items.
+const returnSchema = new mongoose.Schema(
+  {
+    kind: { type: String, enum: ['return', 'canceled', 'refunded'], default: 'return' },
+    reason: { type: String, default: '' },
+    note: { type: String, default: '', maxlength: 200 },
+    items: [
+      {
+        _id: false,
+        variantId: mongoose.Schema.Types.ObjectId,
+        name: String,
+        size: String,
+        quantity: Number,
+        restocked: Boolean,
+        value: Number,
+      },
+    ],
+    value: { type: Number, default: 0 },
+    userName: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: true }
 );
 
 const customerSchema = new mongoose.Schema(
@@ -54,6 +82,9 @@ const orderSchema = new mongoose.Schema(
     amountPaid: { type: Number, default: 0 },
     paidAt: { type: Date, default: null },
     inventoryAdjusted: { type: Boolean, default: false },
+    returns: { type: [returnSchema], default: [] },
+    amountRefunded: { type: Number, default: 0 },
+    refundedAt: { type: Date, default: null },
     needsReview: { type: Boolean, default: false },
     reviewReason: { type: String, default: '' },
   },

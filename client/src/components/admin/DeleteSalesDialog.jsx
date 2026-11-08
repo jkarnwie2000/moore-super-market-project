@@ -16,7 +16,8 @@ export default function DeleteSalesDialog({ orders, onClose, onDeleted }) {
 
   const paid = orders.filter((o) => o.paymentStatus === 'paid');
   const withStock = orders.filter((o) => o.inventoryAdjusted);
-  const units = withStock.reduce((n, o) => n + o.items.reduce((m, i) => m + i.quantity, 0), 0);
+  // Only units still out with customers can go back on the shelf (returns are already counted).
+  const units = withStock.reduce((n, o) => n + o.items.reduce((m, i) => m + i.quantity - (i.returnedQuantity || 0), 0), 0);
   const value = paid.reduce((n, o) => n + o.total, 0);
   const single = orders.length === 1;
 

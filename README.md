@@ -38,12 +38,19 @@ The repo includes `vercel.json` and a serverless entry point (`api/index.js`). T
 - Products: create, edit and delete; image upload (JPG, PNG or WEBP up to 3 MB); multiple sizes per product with price, original price (for sale pricing) and stock; inline price and stock editing; visibility, featured and best-seller flags
 - Categories: create, edit and delete. A category that still has products can't be deleted.
 - Orders: search and filter by payment status, order status and date; detail drawer; status updates (processing → ready for pickup / out for delivery → completed); delete; flags for orders that need review
+- **Automatic stock for sales and returns**:
+  - A **sale** takes stock off the shelf as soon as Stripe confirms payment.
+  - **Record a return** on an order: choose how many of each item came back and whether each goes back into stock or is written off (damaged/expired). You can't return more than was bought, across any number of returns.
+  - **Cancelling a paid order** puts all its unreturned items back into stock, after a confirmation step.
+  - **A full refund in the Stripe dashboard** (`charge.refunded` webhook) marks the order refunded. If it hadn't been handed over yet, the order is cancelled and restocked automatically. If it was already completed, or the refund is partial, the order is flagged for review so staff can record what actually came back.
+  - Every unit can be put back only once, whether through returns, cancellations, refunds or deleting the sale. Each order shows its returns history, and the Sales report shows returned units and partial refunds.
+  - Cancelled and refunded orders don't count as sales.
 - Promotions: percent or fixed-amount codes with minimum order, usage limit, expiry and an active toggle
 
 **Payments (Stripe)**
 - Server-side Stripe Checkout Sessions. **Every price comes from MongoDB**; prices or totals sent by the browser are ignored.
 - Discounts are applied as single-use Stripe coupons; tax is a line item; delivery is a Stripe shipping rate
-- The webhook verifies the signature against the raw body and handles `checkout.session.completed`, `async_payment_succeeded`, `async_payment_failed` and `expired`
+- The webhook verifies the signature against the raw body and handles `checkout.session.completed`, `async_payment_succeeded`, `async_payment_failed`, `expired` and `charge.refunded` (subscribe the endpoint to all five)
 - **Idempotent**: event IDs are recorded, and an order is marked paid by an atomic conditional update, so inventory is reduced exactly once even if Stripe retries
 - Orders whose charged amount doesn't match the expected total, or that oversold during a race, are paid but flagged for admin review
 - Canceled checkouts expire the Stripe session and mark the order canceled; expired and failed payments are recorded
@@ -200,7 +207,7 @@ If port 5173 is taken, Vite picks the next free port (for example 5174). **Updat
    5. Check **Admin → Orders**: the order is **Paid / Processing**, and product stock went down.
    6. Click the back arrow on the Stripe page instead to test cancellation. You return to checkout with your cart intact, and the order is recorded as canceled.
 
-**Production webhooks:** in the Dashboard go to Developers → Webhooks → Add endpoint, use `https://your-domain/api/webhooks/stripe`, and select the events `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired`. Put that endpoint's signing secret in `STRIPE_WEBHOOK_SECRET`.
+**Production webhooks:** in the Dashboard go to Developers → Webhooks → Add endpoint, use `https://your-domain/api/webhooks/stripe`, and select the events `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired` and `charge.refunded`. Put that endpoint's signing secret in `STRIPE_WEBHOOK_SECRET`.
 
 **Going live:** this only happens when the business owner decides to accept real payments. Replace the keys with live ones (`sk_live_...`), set up the live webhook endpoint, and set `STRIPE_LIVE_MODE_ENABLED=true`. Until then, live keys are refused.
 

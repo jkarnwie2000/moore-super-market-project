@@ -64,7 +64,7 @@ function BarList({ rows, valueOf, labelOf, formatValue, detailOf, limit = 8 }) {
 
 function SalesTable({ query, onChanged }) {
   const [scope, setScope] = useState('paid');
-  const params = { ...query, paymentStatus: scope === 'paid' ? 'paid' : '' };
+  const params = { ...query, paymentStatus: scope === 'paid' ? 'paid' : '', excludeCanceled: scope === 'paid' ? '1' : '' };
   const { data, loading, error, reload } = useApi('/admin/orders', params);
   const [selected, setSelected] = useState(() => new Set());
   const [toDelete, setToDelete] = useState(null);
@@ -246,10 +246,10 @@ export default function AdminSales() {
   const p = data?.previous;
   const tiles = s
     ? [
-        ['Gross sales', formatMoney(s.grossSales), s.grossSales, p.grossSales, 'Everything customers paid, including tax and delivery'],
+        ['Gross sales', formatMoney(s.grossSales), s.grossSales, p.grossSales, 'Everything customers paid, including tax and delivery', false, s.refunds ? `${formatMoney(s.refunds)} partly refunded` : ''],
         ['Orders', s.orders, s.orders, p.orders],
         ['Average order', formatMoney(s.averageOrder), s.averageOrder, p.averageOrder],
-        ['Items sold', s.itemsSold, s.itemsSold, p.itemsSold],
+        ['Items sold', s.itemsSold, s.itemsSold, p.itemsSold, null, false, s.returnedUnits ? `${s.returnedUnits} returned (${formatMoney(s.returnsValue)})` : ''],
         ['Net product sales', formatMoney(s.netSales), s.netSales, p.netSales, 'Products after discounts, before tax and delivery'],
         ['Discounts given', formatMoney(s.discounts), s.discounts, p.discounts, null, true],
       ]
@@ -309,11 +309,12 @@ export default function AdminSales() {
       ) : (
         <>
           <div className={`stat-grid stat-grid--6 ${loading ? 'is-loading' : ''}`}>
-            {tiles.map(([label, shown, cur, prev, hint, invert]) => (
+            {tiles.map(([label, shown, cur, prev, hint, invert, extra]) => (
               <div key={label} className="stat" title={hint || undefined}>
                 <span className="stat__label">{label}</span>
                 <strong className="stat__value">{shown}</strong>
                 <Delta current={cur} previous={prev} invert={invert} />
+                {extra && <span className="stat__extra">{extra}</span>}
               </div>
             ))}
           </div>

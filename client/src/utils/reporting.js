@@ -47,5 +47,7 @@ export const REASON_LABELS = {
   adjustment: 'Adjustment',
   damaged: 'Damaged / expired',
   returned: 'Customer return',
+  order_canceled: 'Order cancelled',
+  refunded: 'Refunded',
   order_deleted: 'Sale deleted',
 };

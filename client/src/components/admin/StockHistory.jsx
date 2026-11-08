@@ -85,7 +85,7 @@ export default function StockHistory({ productId, variantId, showProduct = true,
                   <td>{l.stockAfter ?? '—'}</td>
                   <td>{REASON_LABELS[l.reason] || l.reason}</td>
                   <td className="small">
-                    {l.orderNumber && l.reason === 'sale' ? <Link to={`/admin/orders?q=${encodeURIComponent(l.orderNumber)}`}>{l.orderNumber}</Link> : null}
+                    {l.orderNumber && l.reason !== 'order_deleted' ? <Link to={`/admin/orders?q=${encodeURIComponent(l.orderNumber)}`}>{l.orderNumber}</Link> : null}
                     {l.note && <span className="block">{l.note}</span>}
                     {l.userName && <span className="muted block">by {l.userName}</span>}
                   </td>

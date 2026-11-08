@@ -61,9 +61,10 @@ async function inventory(_req, res) {
   const [products, soldRows] = await Promise.all([
     Product.find().sort({ name: 1 }).limit(1000).populate('category', 'name region').lean(),
     Order.aggregate([
-      { $match: { paymentStatus: 'paid', paidAt: { $gte: since } } },
+      { $match: { paymentStatus: 'paid', status: { $ne: 'canceled' }, paidAt: { $gte: since } } },
       { $unwind: '$items' },
-      { $group: { _id: '$items.variantId', quantity: { $sum: '$items.quantity' } } },
+      // Units sold, minus any that came back.
+      { $group: { _id: '$items.variantId', quantity: { $sum: { $subtract: ['$items.quantity', { $ifNull: ['$items.returnedQuantity', 0] }] } } } },
     ]),
   ]);
   const sold = new Map(soldRows.map((r) => [String(r._id), r.quantity]));

@@ -3372,3 +3372,41 @@ code.code,
 .header-action--admin strong {
   color: var(--green);
 }
+
+/* Returns */
+.stat__extra {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.returned-note {
+  color: var(--orange-600);
+  font-weight: 600;
+}
+.return-log {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.return-log li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--orange);
+  border-radius: var(--radius-sm);
+  background: var(--cream);
+}
+.return-log__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.return-table td {
+  vertical-align: middle;
+}
+.return-table .link-btn {
+  margin-top: 4px;
+}
