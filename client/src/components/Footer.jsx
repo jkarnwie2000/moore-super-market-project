@@ -82,7 +82,7 @@ export default function Footer() {
               <FooterLink to="/cart">Shopping cart</FooterLink>
             </li>
             <li>
-              <FooterLink to="/admin">Admin</FooterLink>
+              <FooterLink to="/admin">Admin Link</FooterLink>
             </li>
           </ul>
           <div className="site-footer__secure">

@@ -8,14 +8,15 @@ import ProductCard from '../components/ProductCard';
 import AddedToCartDialog from '../components/AddedToCartDialog';
 import { ackee } from './fixtures';
 
-function renderShop() {
+function renderShop(start = '/shop') {
   return render(
-    <MemoryRouter initialEntries={['/shop']}>
+    <MemoryRouter initialEntries={[start]}>
       <StoreProvider>
         <CartProvider>
           <ToastProvider>
             <Routes>
-              <Route path="/shop" element={<ProductCard product={ackee} />} />
+              <Route path="/shop" element={<h1>All products</h1>} />
+              <Route path="/product/:slug" element={<ProductCard product={ackee} />} />
               <Route path="/checkout" element={<h1>Checkout page</h1>} />
             </Routes>
             <AddedToCartDialog />
@@ -30,7 +31,7 @@ describe('Added to cart dialog', () => {
   beforeEach(() => window.localStorage.removeItem(CART_STORAGE_KEY));
 
   test('adding a product offers Continue shopping or Proceed to checkout', () => {
-    renderShop();
+    renderShop('/product/grace-ackee-in-brine');
     fireEvent.click(screen.getByRole('button', { name: `Add ${ackee.name} to cart` }));
     const dialog = screen.getByRole('dialog', { name: 'Added to your cart' });
     expect(dialog.textContent).toContain(ackee.name);
@@ -40,16 +41,16 @@ describe('Added to cart dialog', () => {
     expect(screen.getByRole('link', { name: /View or edit cart/ }).getAttribute('href')).toBe('/cart');
   });
 
-  test('Continue shopping closes it and keeps the shopper on the page', () => {
-    renderShop();
+  test('Continue shopping closes it and goes to the All Products page', () => {
+    renderShop('/product/grace-ackee-in-brine');
     fireEvent.click(screen.getByRole('button', { name: `Add ${ackee.name} to cart` }));
     fireEvent.click(screen.getByRole('button', { name: 'Continue shopping' }));
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByRole('button', { name: `Add ${ackee.name} to cart` })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'All products' })).toBeTruthy();
   });
 
   test('Proceed to checkout goes to the checkout page', () => {
-    renderShop();
+    renderShop('/product/grace-ackee-in-brine');
     fireEvent.click(screen.getByRole('button', { name: `Add ${ackee.name} to cart` }));
     fireEvent.click(screen.getByRole('button', { name: /Proceed to checkout/ }));
     expect(screen.queryByRole('dialog')).toBeNull();

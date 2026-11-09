@@ -6,6 +6,7 @@ import ProductImage from './ProductImage';
 import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
 import { formatMoney } from '../utils/format';
+import { scrollToTop } from '../utils/scroll';
 
 /**
  * Shown after adding a product: lets the shopper keep browsing or go straight to checkout.
@@ -35,6 +36,7 @@ export default function AddedToCartDialog() {
   const go = (to) => {
     dismissAdded();
     navigate(to);
+    scrollToTop(); // also when already on a (filtered) shop page, where the route reset wouldn't fire
   };
 
   return (
@@ -43,7 +45,7 @@ export default function AddedToCartDialog() {
       onClose={dismissAdded}
       footer={
         <>
-          <button type="button" className="btn btn--outline" onClick={dismissAdded}>
+          <button type="button" className="btn btn--outline" onClick={() => go('/shop')}>
             Continue shopping
           </button>
           <button type="button" className="btn btn--primary" onClick={() => go('/checkout')}>
