@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 
-const COOKIE_NAME = 'ms_token';
+const COOKIE_NAME = 'ms_token'; // shop session
+const ADMIN_COOKIE_NAME = 'ms_admin'; // separate admin-dashboard session
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const signToken = (user) =>
@@ -17,13 +18,13 @@ const cookieOptions = () => ({
   path: '/',
 });
 
-function setAuthCookie(res, user) {
-  res.cookie(COOKIE_NAME, signToken(user), cookieOptions());
+function setAuthCookie(res, user, { admin = false } = {}) {
+  res.cookie(admin ? ADMIN_COOKIE_NAME : COOKIE_NAME, signToken(user), cookieOptions());
 }
 
-function clearAuthCookie(res) {
+function clearAuthCookie(res, { admin = false } = {}) {
   const { maxAge, ...opts } = cookieOptions();
-  res.clearCookie(COOKIE_NAME, opts);
+  res.clearCookie(admin ? ADMIN_COOKIE_NAME : COOKIE_NAME, opts);
 }
 
-module.exports = { COOKIE_NAME, signToken, verifyToken, setAuthCookie, clearAuthCookie };
+module.exports = { COOKIE_NAME, ADMIN_COOKIE_NAME, signToken, verifyToken, setAuthCookie, clearAuthCookie };

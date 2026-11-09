@@ -239,7 +239,7 @@ export function ForgotPasswordPage() {
 
 export function ResetPasswordPage() {
   useDocumentTitle('Choose a new password');
-  const { setUser } = useAuth();
+  const { setUser, setAdmin } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   // Keep the token in memory and remove it from the address bar (and browser history).
@@ -267,6 +267,7 @@ export function ResetPasswordPage() {
     try {
       const { user } = await api.post('/auth/reset-password', { token, password: form.password });
       setUser(user);
+      if (user.role === 'admin') setAdmin(user);
       navigate(user.role === 'admin' ? '/admin' : '/account', { replace: true, state: { passwordChanged: true } });
     } catch (err) {
       setErrors(err.errors || {});
@@ -320,7 +321,7 @@ export function ResetPasswordPage() {
  */
 export function AdminSignIn() {
   useDocumentTitle('Admin sign in');
-  const { user, setUser } = useAuth();
+  const { user, adminLogin } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -334,8 +335,7 @@ export function AdminSignIn() {
     setLoading(true);
     setError('');
     try {
-      const { user: admin } = await api.post('/auth/admin-login', form);
-      setUser(admin); // the admin page re-renders with the dashboard
+      await adminLogin(form.email, form.password); // the admin page re-renders with the dashboard
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -353,7 +353,7 @@ export function AdminSignIn() {
           {user && (
             <div className="alert alert--info">
               <span>
-                You're signed in as <strong>{user.email}</strong> (customer account). Signing in here switches this browser to the admin account.
+                You're signed in to the shop as <strong>{user.email}</strong>. You'll stay signed in to the shop — the admin dashboard has its own separate sign-in and sign-out.
               </span>
             </div>
           )}

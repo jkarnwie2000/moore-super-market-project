@@ -3,6 +3,7 @@ const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const env = require('../config/env');
 const { sendEmail, emailEnabled } = require('../services/emailService');
+const { resolveUser, resolveAdmin } = require('../middleware/auth');
 const { EMAIL_RE, str } = require('../utils/validators');
 const { setAuthCookie, clearAuthCookie } = require('../services/tokenService');
 
@@ -62,8 +63,23 @@ async function adminLogin(req, res) {
   if (user.role !== 'admin') {
     throw new AppError("That account doesn't have admin access. Use the store's admin email and password.", 403);
   }
-  setAuthCookie(res, user);
-  res.json({ user: user.toSafeJSON() });
+  // Separate admin session: whoever is signed in to the shop stays signed in.
+  setAuthCookie(res, user, { admin: true });
+  res.json({ admin: user.toSafeJSON() });
+}
+
+/**
+ * POST /api/auth/admin-logout — signs out of the admin dashboard only. A customer signed in
+ * to the shop stays signed in; an admin who used the normal sign-in page is signed out too.
+ */
+async function adminLogout(req, res) {
+  clearAuthCookie(res, { admin: true });
+  const site = await resolveUser(req);
+  if (site && site.role === 'admin') {
+    clearAuthCookie(res);
+    return res.json({ user: null });
+  }
+  res.json({ user: site ? site.toSafeJSON() : null });
 }
 
 function logout(_req, res) {
@@ -71,8 +87,10 @@ function logout(_req, res) {
   res.json({ message: 'Logged out.' });
 }
 
-function me(req, res) {
-  res.json({ user: req.user ? req.user.toSafeJSON() : null });
+/** GET /api/auth/me — both sessions: the shop user and the admin (if any). */
+async function me(req, res) {
+  const admin = await resolveAdmin(req);
+  res.json({ user: req.user ? req.user.toSafeJSON() : null, admin: admin ? admin.toSafeJSON() : null });
 }
 
 /* ----------------------------- Password reset ----------------------------- */
@@ -139,4 +157,4 @@ async function resetPassword(req, res) {
   res.json({ user: user.toSafeJSON(), message: 'Your password has been changed.' });
 }
 
-module.exports = { register, login, adminLogin, logout, me, validatePassword, forgotPassword, resetPassword };
+module.exports = { register, login, adminLogin, adminLogout, logout, me, validatePassword, forgotPassword, resetPassword };

@@ -104,13 +104,51 @@ describe('Purchase emails', () => {
 });
 
 describe('Admin sign-in while a customer is signed in', () => {
-  test('admin details switch the session to the admin account', async () => {
+  test('admin sign-in opens a separate admin session; the customer stays signed in', async () => {
     const agent = await loginAs(app, 'customer@example.com', 'Customer123');
     expect((await agent.get('/api/admin/stats')).status).toBe(403);
     const res = await agent.post('/api/auth/admin-login').send({ email: 'admin@mooresupermarket.com', password: 'MooreAdmin123' });
     expect(res.status).toBe(200);
-    expect(res.body.user.role).toBe('admin');
+    expect(res.body.admin.role).toBe('admin');
     expect((await agent.get('/api/admin/stats')).status).toBe(200);
+    const me = (await agent.get('/api/auth/me')).body;
+    expect(me.user.email).toBe('customer@example.com'); // shop session unchanged
+    expect(me.admin.email).toBe('admin@mooresupermarket.com');
+    expect((await agent.get('/api/account/orders')).status).toBe(200); // still acting as the customer in the shop
+  });
+
+  test('signing out of admin keeps the customer signed in', async () => {
+    const agent = await loginAs(app, 'customer@example.com', 'Customer123');
+    await agent.post('/api/auth/admin-login').send({ email: 'admin@mooresupermarket.com', password: 'MooreAdmin123' });
+    const out = await agent.post('/api/auth/admin-logout');
+    expect(out.status).toBe(200);
+    expect(out.body.user.email).toBe('customer@example.com');
+    expect((await agent.get('/api/admin/stats')).status).toBe(403);
+    const me = (await agent.get('/api/auth/me')).body;
+    expect(me.user.email).toBe('customer@example.com');
+    expect(me.admin).toBeNull();
+  });
+
+  test('signing the customer out keeps the admin dashboard signed in', async () => {
+    const agent = await loginAs(app, 'customer@example.com', 'Customer123');
+    await agent.post('/api/auth/admin-login').send({ email: 'admin@mooresupermarket.com', password: 'MooreAdmin123' });
+    await agent.post('/api/auth/logout');
+    const me = (await agent.get('/api/auth/me')).body;
+    expect(me.user).toBeNull();
+    expect(me.admin.email).toBe('admin@mooresupermarket.com');
+    expect((await agent.get('/api/admin/stats')).status).toBe(200);
+    expect((await agent.get('/api/account/orders')).status).toBe(401);
+  });
+
+  test('an admin who used the normal sign-in page is signed out by "Sign out of admin"', async () => {
+    const agent = await loginAs(app, 'admin@mooresupermarket.com', 'MooreAdmin123');
+    expect((await agent.get('/api/auth/me')).body.admin.email).toBe('admin@mooresupermarket.com');
+    const out = await agent.post('/api/auth/admin-logout');
+    expect(out.body.user).toBeNull();
+    const me = (await agent.get('/api/auth/me')).body;
+    expect(me.user).toBeNull();
+    expect(me.admin).toBeNull();
+    expect((await agent.get('/api/admin/stats')).status).toBe(401);
   });
 
   test('customer details are refused and the customer stays signed in', async () => {
