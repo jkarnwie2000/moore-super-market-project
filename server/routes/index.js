@@ -3,7 +3,7 @@ const Subscriber = require('../models/Subscriber');
 const AppError = require('../utils/AppError');
 const { EMAIL_RE, str } = require('../utils/validators');
 const { protect, optionalAuth, requireAdmin } = require('../middleware/auth');
-const { authLimiter, checkoutLimiter } = require('../middleware/rateLimit');
+const { authLimiter, checkoutLimiter, resetLimiter } = require('../middleware/rateLimit');
 const { uploadImage } = require('../middleware/upload');
 const auth = require('../controllers/authController');
 const account = require('../controllers/accountController');
@@ -21,6 +21,8 @@ router.get('/config', checkout.publicConfig);
 router.post('/auth/register', authLimiter, auth.register);
 router.post('/auth/login', authLimiter, auth.login);
 router.post('/auth/logout', auth.logout);
+router.post('/auth/forgot-password', resetLimiter, auth.forgotPassword);
+router.post('/auth/reset-password', authLimiter, auth.resetPassword);
 router.get('/auth/me', optionalAuth, auth.me);
 
 // Customer account

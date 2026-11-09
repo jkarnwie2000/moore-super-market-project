@@ -21,4 +21,14 @@ const checkoutLimiter = rateLimit({
   message: { message: 'Too many checkout attempts. Please wait a moment.' },
 });
 
-module.exports = { authLimiter, checkoutLimiter };
+// Password-reset emails: few per hour, so the form can't be used to spam someone's inbox.
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skip,
+  message: { message: 'Too many reset requests. Please try again in an hour.' },
+});
+
+module.exports = { authLimiter, checkoutLimiter, resetLimiter };

@@ -1,51 +1,34 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import BackToTop from '../components/BackToTop';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { StoreProvider } from '../context/StoreContext';
+import Footer from '../components/Footer';
 
-describe('BackToTop', () => {
+describe('Back-to-top arrow in the footer', () => {
   beforeEach(() => {
     window.scrollTo = vi.fn();
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
-      cb();
-      return 1;
-    });
   });
-  afterEach(() => {
-    vi.restoreAllMocks();
-    window.scrollY = 0;
-  });
+  afterEach(() => vi.restoreAllMocks());
 
-  const scrollTo = (y) =>
-    act(() => {
-      window.scrollY = y;
-      window.dispatchEvent(new Event('scroll'));
-    });
-
-  test('is hidden near the top and appears after scrolling down', () => {
-    const { container } = render(
-      <main id="main">
-        <BackToTop />
-      </main>
-    );
-    // While hidden it is aria-hidden (not announced), so select it directly.
-    const btn = container.querySelector('.back-to-top');
-    expect(btn.getAttribute('aria-hidden')).toBe('true');
-    expect(btn.className).not.toContain('is-visible');
-    expect(btn.getAttribute('tabindex')).toBe('-1');
-    scrollTo(1200);
-    expect(btn.className).toContain('is-visible');
-    expect(btn.getAttribute('tabindex')).toBe('0');
-    scrollTo(100);
-    expect(btn.className).not.toContain('is-visible');
-  });
-
-  test('clicking scrolls to the top and moves focus to the page', () => {
+  const renderFooter = () =>
     render(
-      <main id="main">
-        <BackToTop />
-      </main>
+      <MemoryRouter>
+        <StoreProvider>
+          <main id="main" />
+          <Footer />
+        </StoreProvider>
+      </MemoryRouter>
     );
-    scrollTo(2000);
+
+  test('sits between the copyright and the prices note in the footer bottom line', () => {
+    const { container } = renderFooter();
+    const bar = container.querySelector('.site-footer__bottom .container');
+    const parts = [...bar.children].map((el) => el.className || el.tagName);
+    expect(parts).toEqual(['site-footer__copy', 'back-to-top', 'site-footer__note']);
+  });
+
+  test('clicking it scrolls to the top and moves focus to the page', () => {
+    renderFooter();
     fireEvent.click(screen.getByRole('button', { name: 'Back to top' }));
     expect(window.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
     expect(document.activeElement.id).toBe('main');

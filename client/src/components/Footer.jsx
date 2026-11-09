@@ -3,6 +3,7 @@ import Logo from './Logo';
 import Icon from './Icon';
 import { useStore } from '../context/StoreContext';
 import { scrollToTop } from '../utils/scroll';
+import BackToTop from './BackToTop';
 
 /**
  * Footer links always take you to the top of the page — including links that only change
@@ -92,8 +93,9 @@ export default function Footer() {
       </div>
       <div className="site-footer__bottom">
         <div className="container">
-          <span>© {new Date().getFullYear()} Moore Supermarket. All rights reserved.</span>
-          <span>Prices and availability subject to change.</span>
+          <span className="site-footer__copy">© {new Date().getFullYear()} Moore Supermarket. All rights reserved.</span>
+          <BackToTop />
+          <span className="site-footer__note">Prices and availability subject to change.</span>
         </div>
       </div>
     </footer>

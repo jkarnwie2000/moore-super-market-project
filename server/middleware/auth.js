@@ -15,7 +15,10 @@ async function resolveUser(req) {
   try {
     const payload = verifyToken(token);
     // Re-load the user so role changes and deletions take effect immediately.
-    return await User.findById(payload.sub);
+    const user = await User.findById(payload.sub);
+    // A session from before the latest password change (e.g. a reset) is no longer valid.
+    if (user && (payload.v || 0) !== (user.sessionVersion || 0)) return null;
+    return user;
   } catch {
     return null;
   }

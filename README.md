@@ -28,6 +28,7 @@ The repo includes `vercel.json` and a serverless entry point (`api/index.js`). T
 - Register, log in and log out. Passwords are hashed with bcrypt (12 rounds); sessions use a JWT in an **httpOnly** cookie.
 - Profile and password change, saved addresses (add, edit, delete, set default), order history with statuses
 - Checkout pre-fills from your default address
+- **Forgot password**: the sign-in page links to a reset form. A one-time link is emailed and is valid for 1 hour; only a hash is stored. The response never reveals whether an email has an account. Requests are rate-limited, and changing the password signs out every other session.
 
 **Admin** (`/admin`, `admin` role only; enforced on every API route)
 - Dashboard: revenue, paid orders, orders awaiting fulfilment, a 30-day sales chart, low stock, recent orders
@@ -141,6 +142,7 @@ Edit `.env` in the project root:
 | `PORT` | no | API port (default `5000`) |
 | `JWT_SECRET` | production | Long random string. Generate one with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `TAX_RATE`, `DELIVERY_FEE`, `FREE_DELIVERY_THRESHOLD`, `CURRENCY`, `STORE_ADDRESS` | no | Store pricing (defaults: 7%, $7.99, free over $75, USD) |
+| `RESEND_API_KEY`, `EMAIL_FROM` | for password-reset emails | API key and sender for [Resend](https://resend.com). Without a key, "Forgot password" can't deliver email (the link is printed to the server log in development). |
 | `STORE_TIMEZONE` | no | Time zone used to group sales by day (default `America/New_York`) |
 | `LOW_STOCK_THRESHOLD` | no | A product size at or below this many units is "low stock" (default `10`) |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | no | Admin account created by `npm run seed` |

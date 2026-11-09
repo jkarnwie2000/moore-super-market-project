@@ -29,6 +29,10 @@ const env = {
   deliveryFee: toNumber(process.env.DELIVERY_FEE, 7.99),
   freeDeliveryThreshold: toNumber(process.env.FREE_DELIVERY_THRESHOLD, 75),
   storeAddress: process.env.STORE_ADDRESS || 'Moore Supermarket, 1200 Market Street',
+  // Transactional email (password resets) via Resend — https://resend.com. Without an API key,
+  // reset links are only printed to the server log (fine for local development).
+  resendApiKey: process.env.RESEND_API_KEY || '',
+  emailFrom: process.env.EMAIL_FROM || 'Moore Supermarket <onboarding@resend.dev>',
   // Sales reports group by calendar day in the store's local time zone.
   storeTimezone: process.env.STORE_TIMEZONE || 'America/New_York',
   // A product size at or below this many units is flagged "low stock".

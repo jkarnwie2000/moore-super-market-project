@@ -4,7 +4,8 @@ const env = require('../config/env');
 const COOKIE_NAME = 'ms_token';
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-const signToken = (user) => jwt.sign({ sub: user._id.toString(), role: user.role }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
+const signToken = (user) =>
+  jwt.sign({ sub: user._id.toString(), role: user.role, v: user.sessionVersion || 0 }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
 
 const verifyToken = (token) => jwt.verify(token, env.jwtSecret);
 

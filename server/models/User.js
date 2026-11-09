@@ -25,6 +25,13 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, trim: true, maxlength: 30, default: '' },
     role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
     addresses: { type: [addressSchema], default: [] },
+    // Password reset: only a SHA-256 hash of the emailed token is stored, never the token itself.
+    resetPasswordTokenHash: { type: String, select: false, default: undefined },
+    resetPasswordExpires: { type: Date, select: false, default: undefined },
+    // Bumped on every password change; sessions carrying an older number are rejected
+    // (see middleware/auth.js), so a reset signs out everywhere immediately.
+    sessionVersion: { type: Number, default: 0 },
+    passwordChangedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -32,6 +39,11 @@ const userSchema = new mongoose.Schema(
 userSchema.pre('save', async function hashPassword() {
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);
+  // Changing an existing password signs out every older session.
+  if (!this.isNew) {
+    this.sessionVersion = (this.sessionVersion || 0) + 1;
+    this.passwordChangedAt = new Date();
+  }
 });
 
 userSchema.methods.comparePassword = function comparePassword(candidate) {
