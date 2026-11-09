@@ -13,7 +13,7 @@ import { formatMoney, percentOff } from '../utils/format';
 export default function ProductPage() {
   const { slug } = useParams();
   const { data, loading, error, reload } = useApi(`/products/${encodeURIComponent(slug)}`);
-  const { add, quantityOf } = useCart();
+  const { addAndConfirm, quantityOf } = useCart();
   const { notify } = useToast();
   const [variantId, setVariantId] = useState(null);
   const [qty, setQty] = useState(1);
@@ -121,14 +121,7 @@ export default function ProductPage() {
               disabled={remaining === 0}
               onClick={() => {
                 const q = Math.min(qty, remaining);
-                add(product, variant, q);
-                notify(`Added ${q} × ${product.name} (${variant.label}) to your cart`, {
-                  action: (
-                    <Link to="/cart" className="toast__action">
-                      View cart
-                    </Link>
-                  ),
-                });
+                addAndConfirm(product, variant, q);
                 setQty(1);
               }}
             >

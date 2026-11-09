@@ -17,6 +17,8 @@ function loadStoredCart() {
 export function CartProvider({ children }) {
   const [items, dispatch] = useReducer(cartReducer, undefined, loadStoredCart);
   const [syncNotice, setSyncNotice] = useState('');
+  // The item just added from a product card/page, shown in the "Added to cart" dialog.
+  const [justAdded, setJustAdded] = useState(null);
 
   // Persist on every change so a refresh never loses the cart.
   useEffect(() => {
@@ -55,6 +57,13 @@ export function CartProvider({ children }) {
       items,
       count: cartCount(items),
       add: (product, variant, quantity = 1) => dispatch({ type: 'add', product, variant, quantity }),
+      // Adds to the cart and opens the "Continue shopping / Proceed to checkout" dialog.
+      addAndConfirm: (product, variant, quantity = 1) => {
+        dispatch({ type: 'add', product, variant, quantity });
+        setJustAdded({ productId: product.id || product._id, variantId: variant._id, quantity, at: Date.now() });
+      },
+      justAdded,
+      dismissAdded: () => setJustAdded(null),
       setQuantity: (key, quantity) => dispatch({ type: 'setQuantity', key, quantity }),
       remove: (key) => dispatch({ type: 'remove', key }),
       clear: () => dispatch({ type: 'clear' }),
@@ -63,7 +72,7 @@ export function CartProvider({ children }) {
       syncNotice,
       dismissSyncNotice: () => setSyncNotice(''),
     }),
-    [items, refresh, syncNotice]
+    [items, refresh, syncNotice, justAdded]
   );
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

@@ -3,12 +3,10 @@ import Icon from './Icon';
 import ProductImage from './ProductImage';
 import { Rating } from './ui';
 import { useCart } from '../context/CartContext';
-import { useToast } from '../context/ToastContext';
 import { formatMoney, percentOff } from '../utils/format';
 
 export default function ProductCard({ product }) {
-  const { add, quantityOf } = useCart();
-  const { notify } = useToast();
+  const { addAndConfirm, quantityOf } = useCart();
   // Always show the cheapest size so the displayed price matches price sorting and filtering.
   const variant = [...product.variants].sort((a, b) => a.price - b.price)[0];
   // If a different size is discounted, flag it so weekly deals stay visible.
@@ -54,8 +52,7 @@ export default function ProductCard({ product }) {
             disabled={soldOut || atLimit}
             aria-label={`Add ${product.name} to cart`}
             onClick={() => {
-              add(product, variant, 1);
-              notify(`Added ${product.name} (${variant.label}) to your cart`);
+              addAndConfirm(product, variant, 1);
             }}
           >
             {soldOut ? 'Sold out' : atLimit ? 'Max in cart' : (
