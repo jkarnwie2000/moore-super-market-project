@@ -7,6 +7,7 @@ const { isObjectId, toInt } = require('../utils/validators');
 const { computeTotals } = require('./pricingService');
 const { findValidPromotion } = require('./promotionService');
 const { applyStockChange } = require('./inventoryService');
+const { sendOrderEmails } = require('./orderEmails');
 
 const MAX_LINE_QTY = 99;
 const MAX_LINES = 60;
@@ -162,6 +163,8 @@ async function markOrderPaid({ orderId, sessionId, paymentIntentId, amountTotalC
     order.reviewReason = reviewReasons.join(' ');
   }
   await order.save();
+  // Purchase emails: confirmation to the shopper + alert to the business (sent once, never throws).
+  await sendOrderEmails(order);
   return order;
 }
 

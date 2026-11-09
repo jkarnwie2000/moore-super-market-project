@@ -47,6 +47,25 @@ async function login(req, res) {
   res.json({ user: user.toSafeJSON() });
 }
 
+/**
+ * POST /api/auth/admin-login — the admin sign-in shown on /admin. Only switches this
+ * browser's session if the account is an administrator; a customer who is already signed
+ * in stays signed in as themselves when the details aren't an admin's.
+ */
+async function adminLogin(req, res) {
+  const email = str(req.body.email, 120).toLowerCase();
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const user = email ? await User.findOne({ email }).select('+password') : null;
+  if (!user || !(await user.comparePassword(password))) {
+    throw new AppError('Incorrect email or password.', 401);
+  }
+  if (user.role !== 'admin') {
+    throw new AppError("That account doesn't have admin access. Use the store's admin email and password.", 403);
+  }
+  setAuthCookie(res, user);
+  res.json({ user: user.toSafeJSON() });
+}
+
 function logout(_req, res) {
   clearAuthCookie(res);
   res.json({ message: 'Logged out.' });
@@ -120,4 +139,4 @@ async function resetPassword(req, res) {
   res.json({ user: user.toSafeJSON(), message: 'Your password has been changed.' });
 }
 
-module.exports = { register, login, logout, me, validatePassword, forgotPassword, resetPassword };
+module.exports = { register, login, adminLogin, logout, me, validatePassword, forgotPassword, resetPassword };

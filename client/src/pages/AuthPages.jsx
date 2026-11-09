@@ -9,7 +9,7 @@ import { api } from '../services/api';
 /** Only allow internal redirect targets after login (prevents open redirects). */
 const safeNext = (next) => (next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
 
-function AuthShell({ title, subtitle, children, footer }) {
+export function AuthShell({ title, subtitle, children, footer }) {
   return (
     <div className="auth">
       <div className="auth__panel">
@@ -310,5 +310,72 @@ export function ResetPasswordPage() {
         </button>
       </form>
     </AuthShell>
+  );
+}
+
+/**
+ * Admin sign-in, shown on any /admin page to visitors who aren't signed in as an admin —
+ * including a customer who is signed in. Admin details switch this browser to the admin
+ * account; anything else is refused and the current session is left as it was.
+ */
+export function AdminSignIn() {
+  useDocumentTitle('Admin sign in');
+  const { user, setUser } = useAuth();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!EMAIL_RE.test(form.email) || !form.password) {
+      setError('Please enter the admin email and password.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const { user: admin } = await api.post('/auth/admin-login', form);
+      setUser(admin); // the admin page re-renders with the dashboard
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="container">
+      <AuthShell
+        title="Admin sign in"
+        subtitle="Sign in with the store's admin account to open the dashboard."
+        footer={<Link to="/">← Back to the shop</Link>}
+      >
+        <form className="stack" onSubmit={submit} noValidate>
+          {user && (
+            <div className="alert alert--info">
+              <span>
+                You're signed in as <strong>{user.email}</strong> (customer account). Signing in here switches this browser to the admin account.
+              </span>
+            </div>
+          )}
+          {error && (
+            <div className="alert alert--error" role="alert">
+              {error}
+            </div>
+          )}
+          <Field label="Admin email">
+            <input type="email" autoComplete="username" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} autoFocus />
+          </Field>
+          <Field label="Password">
+            <input type="password" autoComplete="current-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          </Field>
+          <Link to={`/forgot-password${EMAIL_RE.test(form.email) ? `?email=${encodeURIComponent(form.email)}` : ''}`} className="auth__forgot">
+            Forgot password?
+          </Link>
+          <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign in to admin'}
+          </button>
+        </form>
+      </AuthShell>
+    </div>
   );
 }

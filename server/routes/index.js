@@ -20,6 +20,7 @@ router.get('/config', checkout.publicConfig);
 // Auth
 router.post('/auth/register', authLimiter, auth.register);
 router.post('/auth/login', authLimiter, auth.login);
+router.post('/auth/admin-login', authLimiter, auth.adminLogin);
 router.post('/auth/logout', auth.logout);
 router.post('/auth/forgot-password', resetLimiter, auth.forgotPassword);
 router.post('/auth/reset-password', authLimiter, auth.resetPassword);
@@ -77,6 +78,8 @@ adminRouter.get('/sales', salesInventory.sales);
 adminRouter.get('/inventory', salesInventory.inventory);
 adminRouter.post('/inventory/adjust', salesInventory.adjust);
 adminRouter.get('/inventory/history', salesInventory.history);
+adminRouter.get('/email', salesInventory.emailSettings);
+adminRouter.post('/email/test', salesInventory.emailTest);
 adminRouter.get('/promotions', admin.listPromotions);
 adminRouter.post('/promotions', admin.createPromotion);
 adminRouter.put('/promotions/:id', admin.updatePromotion);

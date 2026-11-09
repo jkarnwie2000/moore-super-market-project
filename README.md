@@ -28,6 +28,8 @@ The repo includes `vercel.json` and a serverless entry point (`api/index.js`). T
 - Register, log in and log out. Passwords are hashed with bcrypt (12 rounds); sessions use a JWT in an **httpOnly** cookie.
 - Profile and password change, saved addresses (add, edit, delete, set default), order history with statuses
 - Checkout pre-fills from your default address
+- **Purchase emails**: when a payment is confirmed, the shopper gets an order confirmation (items, totals, delivery or pickup details) and the business gets a "New order" alert with the customer's contact details and a link to the order. They are sent once per order, even if Stripe retries, and an email problem never affects the payment. Email goes out through any SMTP mailbox (Gmail by default), so no domain is needed. The dashboard shows whether email is on and has a **Send test email** button.
+- **Admin sign-in**: any `/admin` page shows an admin sign-in form to visitors who aren't admins, including a signed-in customer. Admin details switch the browser to the admin account; customer details are refused and the customer stays signed in.
 - **Forgot password**: the sign-in page links to a reset form. A one-time link is emailed and is valid for 1 hour; only a hash is stored. The response never reveals whether an email has an account. Requests are rate-limited, and changing the password signs out every other session.
 
 **Admin** (`/admin`, `admin` role only; enforced on every API route)
@@ -142,7 +144,7 @@ Edit `.env` in the project root:
 | `PORT` | no | API port (default `5000`) |
 | `JWT_SECRET` | production | Long random string. Generate one with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `TAX_RATE`, `DELIVERY_FEE`, `FREE_DELIVERY_THRESHOLD`, `CURRENCY`, `STORE_ADDRESS` | no | Store pricing (defaults: 7%, $7.99, free over $75, USD) |
-| `RESEND_API_KEY`, `EMAIL_FROM` | for password-reset emails | API key and sender for [Resend](https://resend.com). Without a key, "Forgot password" can't deliver email (the link is printed to the server log in development). |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM_NAME`, `STORE_NOTIFY_EMAIL` | for email | Mailbox used to send order confirmations, new-order alerts and password resets (Gmail by default; use an app password). `STORE_NOTIFY_EMAIL` receives the alerts (defaults to `SMTP_USER`). Without `SMTP_USER`/`SMTP_PASS` no email is sent. |
 | `STORE_TIMEZONE` | no | Time zone used to group sales by day (default `America/New_York`) |
 | `LOW_STOCK_THRESHOLD` | no | A product size at or below this many units is "low stock" (default `10`) |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | no | Admin account created by `npm run seed` |

@@ -169,4 +169,40 @@ async function history(req, res) {
   res.json({ logs: logs.slice(0, limit), hasMore: logs.length > limit });
 }
 
-module.exports = { sales, deleteOne, deleteMany, inventory, adjust, history };
+/* ----------------------------- Email ----------------------------- */
+
+const { sendEmail, emailEnabled, verifySmtp } = require('../services/emailService');
+
+/** GET /api/admin/email — is purchase email set up, and where do alerts go? */
+async function emailSettings(_req, res) {
+  res.json({
+    enabled: emailEnabled(),
+    provider: env.smtpUser ? 'smtp' : env.resendApiKey ? 'resend' : null,
+    sender: env.smtpUser || null,
+    smtpHost: env.smtpUser ? env.smtpHost : null,
+    notifyTo: env.storeNotifyEmail || null,
+  });
+}
+
+/** POST /api/admin/email/test — sends a test message to the business address. */
+async function emailTest(req, res) {
+  if (!emailEnabled()) throw new AppError('Email is not set up yet: add SMTP_USER and SMTP_PASS in the hosting settings.', 409);
+  const to = env.storeNotifyEmail || req.user.email;
+  if (env.smtpUser) {
+    const check = await verifySmtp();
+    if (!check.ok) throw new AppError(`Could not sign in to the email account (${env.smtpHost}): ${check.reason}`, 502);
+  }
+  try {
+    await sendEmail({
+      to,
+      subject: 'Moore Supermarket — test email',
+      text: `This is a test from your store's admin dashboard, sent by ${req.user.name}. Purchase confirmations and new-order alerts will be sent the same way.`,
+      html: `<p>This is a test from your store's admin dashboard, sent by ${String(req.user.name).replace(/[<>&]/g, '')}.</p><p>Purchase confirmations and new-order alerts will be sent the same way.</p>`,
+    });
+  } catch (err) {
+    throw new AppError(`Sending failed: ${err.message}`, 502);
+  }
+  res.json({ message: `Test email sent to ${to}.` });
+}
+
+module.exports = { sales, deleteOne, deleteMany, inventory, adjust, history, emailSettings, emailTest };

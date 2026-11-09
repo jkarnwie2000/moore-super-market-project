@@ -84,6 +84,9 @@ const orderSchema = new mongoose.Schema(
     inventoryAdjusted: { type: Boolean, default: false },
     returns: { type: [returnSchema], default: [] },
     amountRefunded: { type: Number, default: 0 },
+    // Purchase emails (customer confirmation + business alert): when sent, and how it went.
+    emailsSentAt: { type: Date, default: null },
+    emailStatus: { type: String, default: '' },
     refundedAt: { type: Date, default: null },
     needsReview: { type: Boolean, default: false },
     reviewReason: { type: String, default: '' },

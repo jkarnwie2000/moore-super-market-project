@@ -29,10 +29,20 @@ const env = {
   deliveryFee: toNumber(process.env.DELIVERY_FEE, 7.99),
   freeDeliveryThreshold: toNumber(process.env.FREE_DELIVERY_THRESHOLD, 75),
   storeAddress: process.env.STORE_ADDRESS || 'Moore Supermarket, 1200 Market Street',
-  // Transactional email (password resets) via Resend — https://resend.com. Without an API key,
-  // reset links are only printed to the server log (fine for local development).
+  // Email (order confirmations, new-order alerts, password resets) is sent through an ordinary
+  // mailbox over SMTP — no domain needed. Gmail by default: SMTP_USER = the Gmail address,
+  // SMTP_PASS = a Google "app password". Without SMTP_USER/SMTP_PASS nothing is sent and the
+  // messages are printed to the server log instead (fine for local development).
+  smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+  smtpPort: toNumber(process.env.SMTP_PORT, 465),
+  smtpUser: (process.env.SMTP_USER || '').trim(),
+  smtpPass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''), // Google shows app passwords in groups of 4
+  emailFromName: process.env.EMAIL_FROM_NAME || 'Moore Supermarket',
+  // Where "New order" alerts go. Defaults to the sending mailbox.
+  storeNotifyEmail: (process.env.STORE_NOTIFY_EMAIL || process.env.SMTP_USER || '').trim(),
+  // Optional alternative: Resend HTTP API (needs a verified domain to email customers).
   resendApiKey: process.env.RESEND_API_KEY || '',
-  emailFrom: process.env.EMAIL_FROM || 'Moore Supermarket <onboarding@resend.dev>',
+  emailFrom: process.env.EMAIL_FROM || '',
   // Sales reports group by calendar day in the store's local time zone.
   storeTimezone: process.env.STORE_TIMEZONE || 'America/New_York',
   // A product size at or below this many units is flagged "low stock".

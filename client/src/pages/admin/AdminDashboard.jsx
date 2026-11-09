@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ErrorState, PageLoader, StatusBadge } from '../../components/ui';
 import { useApi } from '../../hooks/useApi';
 import RevenueChart from '../../components/admin/RevenueChart';
+import EmailStatusCard from '../../components/admin/EmailStatusCard';
 import { formatDateTime, formatMoney } from '../../utils/format';
 
 export default function AdminDashboard() {
@@ -51,6 +52,8 @@ export default function AdminDashboard() {
         </div>
         {sales.data ? <RevenueChart series={sales.data.series} compact /> : sales.error ? <p className="muted small">{sales.error.message}</p> : <PageLoader />}
       </section>
+
+      <EmailStatusCard />
 
       <div className="admin-two">
         <section className="card">

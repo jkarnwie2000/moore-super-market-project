@@ -13,6 +13,13 @@ import { formatDateTime, formatMoney, statusLabel } from '../../utils/format';
 const ORDER_STATUSES = ['awaiting_payment', 'processing', 'ready_for_pickup', 'out_for_delivery', 'completed', 'canceled'];
 const PAYMENT_STATUSES = ['unpaid', 'paid', 'failed', 'canceled', 'expired', 'refunded'];
 
+/** "customer:sent store:failed" → "Customer ✓ sent · Store ✗ failed" */
+function emailSummary(status = '') {
+  const label = { sent: '✓ sent', failed: '✗ failed', 'not-configured': 'not sent (email off)', none: '—' };
+  const parts = Object.fromEntries(status.split(' ').map((p) => p.split(':')));
+  return `Customer ${label[parts.customer] || '—'} · Store ${label[parts.store] || '—'}`;
+}
+
 function OrderDetail({ id, onClose, onUpdated }) {
   const { data, loading, error } = useApi(`/admin/orders/${id}`);
   const [order, setOrder] = useState(null);
@@ -106,6 +113,12 @@ function OrderDetail({ id, onClose, onUpdated }) {
                   <dt>Paid</dt>
                   <dd>{order.paidAt ? formatDateTime(order.paidAt) : '—'}</dd>
                 </div>
+                {order.emailsSentAt && (
+                  <div>
+                    <dt>Emails</dt>
+                    <dd>{emailSummary(order.emailStatus)}</dd>
+                  </div>
+                )}
                 <div>
                   <dt>Fulfilment</dt>
                   <dd>{order.deliveryMethod === 'pickup' ? 'Store pickup' : 'Home delivery'}</dd>

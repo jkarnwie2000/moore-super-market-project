@@ -3516,3 +3516,22 @@ code.code,
   font-size: 0.9rem;
   font-weight: 600;
 }
+
+.email-card {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.email-card .admin__head {
+  width: 100%;
+}
+.email-card p,
+.email-card .alert {
+  margin: 0;
+}
+.email-card code {
+  font-size: 0.85em;
+  background: var(--cream);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
