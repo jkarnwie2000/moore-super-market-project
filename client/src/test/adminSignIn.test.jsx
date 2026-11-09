@@ -74,14 +74,10 @@ describe('Admin Link while signed in as a customer', () => {
 });
 
 describe('Sign out of admin', () => {
-  test('ends only the admin session; the customer stays signed in to the shop', async () => {
+  test('the admin bar opens the separate sign-out screen; signing out keeps the customer signed in', async () => {
     const { default: AdminLayout } = await import('../pages/admin/AdminLayout');
+    const { default: AdminSignOut } = await import('../pages/admin/AdminSignOut');
     const { ToastProvider } = await import('../context/ToastContext');
-    const { useAuth } = await import('../context/AuthContext');
-    function Shop() {
-      const { user, admin } = useAuth();
-      return <h1>Shop — {user ? user.email : 'signed out'} — admin {admin ? 'on' : 'off'}</h1>;
-    }
     global.fetch = vi.fn(async (url) => {
       const u = String(url);
       if (u.endsWith('/auth/me')) return { ok: true, status: 200, json: async () => ({ user: CUSTOMER, admin: ADMIN }) };
@@ -93,15 +89,20 @@ describe('Sign out of admin', () => {
         <AuthProvider>
           <ToastProvider>
             <Routes>
-              <Route path="/" element={<Shop />} />
+              <Route path="/admin/sign-out" element={<AdminSignOut />} />
               <Route path="/admin" element={<AdminLayout />} />
             </Routes>
           </ToastProvider>
         </AuthProvider>
       </MemoryRouter>
     );
-    fireEvent.click(await screen.findByRole('button', { name: /Sign out of admin/ }));
-    expect(await screen.findByRole('heading', { name: 'Shop — customer@example.com — admin off' })).toBeTruthy();
-    expect(screen.getByText(/still signed in to the shop as customer@example.com/)).toBeTruthy();
+    const bar = await screen.findByRole('region', { name: 'Admin session' });
+    expect(bar.textContent).toContain('Signed in to the admin dashboard as Moore Admin');
+    fireEvent.click(screen.getAllByRole('link', { name: /Sign out of admin/ })[0]);
+    expect(await screen.findByRole('heading', { name: 'Admin sign out' })).toBeTruthy();
+    expect(screen.getByText(/will stay signed in/).textContent).toContain('customer@example.com');
+    fireEvent.click(screen.getByRole('button', { name: /Sign out of admin/ }));
+    expect(await screen.findByRole('heading', { name: 'Signed out of admin' })).toBeTruthy();
+    expect(screen.getByText(/still signed in to the shop as/).textContent).toContain('customer@example.com');
   });
 });

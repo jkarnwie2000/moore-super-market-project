@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Logo from './Logo';
 import Icon from './Icon';
 import { useStore } from '../context/StoreContext';
+import { useAuth } from '../context/AuthContext';
 import { scrollToTop } from '../utils/scroll';
 import BackToTop from './BackToTop';
 
@@ -26,6 +27,7 @@ function FooterLink({ to, children }) {
 
 export default function Footer() {
   const { african, caribbean } = useStore();
+  const { isAdmin } = useAuth() || {}; // footer also renders outside the auth provider in tests
   return (
     <footer className="site-footer">
       <div className="kente-band" aria-hidden="true" />
@@ -85,6 +87,11 @@ export default function Footer() {
             <li>
               <FooterLink to="/admin">Admin Link</FooterLink>
             </li>
+            {isAdmin && (
+              <li>
+                <FooterLink to="/admin/sign-out">Admin sign out</FooterLink>
+              </li>
+            )}
           </ul>
           <div className="site-footer__secure">
             <Icon name="shield" size={18} /> Secure payments by Stripe

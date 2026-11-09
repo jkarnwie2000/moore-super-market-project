@@ -1,7 +1,6 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import Icon from '../../components/Icon';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../context/ToastContext';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
 const LINKS = [
@@ -16,20 +15,18 @@ const LINKS = [
 
 export default function AdminLayout() {
   useDocumentTitle('Admin');
-  const { admin, user, adminLogout } = useAuth();
-  const { notify } = useToast();
-  const navigate = useNavigate();
-
-  // Signs out of the admin dashboard only; a customer signed in to the shop stays signed in.
-  async function signOutOfAdmin() {
-    const shopUser = user && user.role !== 'admin' ? user : null;
-    await adminLogout();
-    navigate('/', { replace: true });
-    notify(shopUser ? `Signed out of the admin dashboard. You're still signed in to the shop as ${shopUser.email}.` : 'Signed out of the admin dashboard.');
-  }
+  const { admin } = useAuth();
 
   return (
     <div className="container admin">
+      <div className="admin__bar" role="region" aria-label="Admin session">
+        <span>
+          <Icon name="shield" size={16} /> Signed in to the admin dashboard{admin ? <> as <strong>{admin.name}</strong></> : null}
+        </span>
+        <Link to="/admin/sign-out" className="btn btn--danger-outline btn--sm">
+          <Icon name="logout" size={16} /> Sign out of admin
+        </Link>
+      </div>
       <aside className="admin__nav" aria-label="Admin navigation">
         <p className="eyebrow">Store admin</p>
         {LINKS.map(([to, label, icon, end]) => (
@@ -43,9 +40,9 @@ export default function AdminLayout() {
               Admin: <strong>{admin.name}</strong>
             </p>
           )}
-          <button type="button" className="admin__link admin__signout" onClick={signOutOfAdmin}>
+          <Link to="/admin/sign-out" className="admin__link admin__signout">
             <Icon name="logout" size={18} /> Sign out of admin
-          </button>
+          </Link>
         </div>
       </aside>
       <section className="admin__main">

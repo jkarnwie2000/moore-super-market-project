@@ -24,6 +24,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminPromotions from './pages/admin/AdminPromotions';
 import AdminSales from './pages/admin/AdminSales';
 import AdminInventory from './pages/admin/AdminInventory';
+import AdminSignOut from './pages/admin/AdminSignOut';
 
 /** Every new page opens at the top. (Footer links also scroll up themselves — see Footer.jsx.) */
 function ScrollToTop() {
@@ -64,6 +65,7 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route path="/admin/sign-out" element={<AdminSignOut />} />
           <Route
             path="/admin"
             element={

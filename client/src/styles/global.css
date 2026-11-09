@@ -3571,3 +3571,27 @@ code.code,
     margin-bottom: 4px;
   }
 }
+
+/* Bar across the top of every admin page: who's signed in + Sign out of admin */
+.admin__bar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+.admin__bar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+a.admin__signout {
+  text-decoration: none;
+}
