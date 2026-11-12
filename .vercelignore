@@ -6,3 +6,4 @@ server/tests
 client/src/test
 .env
 .env.*
+docs

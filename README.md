@@ -1,11 +1,38 @@
 # Moore Supermarket — African & Caribbean Grocery Store
 
-A full-stack e-commerce application for **Moore Supermarket**, an African and Caribbean specialty grocery store.
-Customers can browse 66 products across 20 categories, search and filter, manage a persistent cart, check out with
-**Stripe Checkout**, and track orders. Staff get a role-protected admin dashboard for products, inventory, categories,
-orders and discount codes.
+## About
+
+Moore Supermarket is a full-stack e-commerce store for an African and Caribbean specialty grocer, built so a small neighbourhood business can sell online as professionally as a large national chain. Shoppers browse 66 authentic products across 20 categories, from Nigerian ofada rice, garri and red palm oil to Jamaican ackee, jerk seasoning and Ting, with fast search, filters by region, category, price and deals, and sorting by price, popularity and rating. Every product page offers multiple package sizes with live stock levels, so customers never order more than the shelf holds.
+
+The cart is saved in the browser and kept in sync with the store, and adding an item opens a quick choice to continue shopping or proceed to checkout, with a running subtotal and progress toward free delivery. Checkout supports home delivery or free store pickup, discount codes and clear tax and delivery totals. Payment runs through Stripe Checkout: every price is recalculated on the server from the database, webhooks are signature-verified and processed exactly once, and inventory is reduced only when payment is confirmed. Customers receive an order confirmation email, the business receives a new-order alert, and shoppers can register, save addresses, track orders and reset a forgotten password by email.
+
+Staff run the business from a role-protected admin dashboard with its own sign-in, kept separate from any customer session in the same browser. The dashboard tracks revenue with a sales report by day or month, period-over-period comparisons, top products, sales by category and CSV export. The inventory view shows stock for every size, estimated days of cover and a complete history of every stock movement. Stock adjusts automatically for sales, returns, cancellations and Stripe refunds, and a unit can never be restocked twice. Admins also manage products and images, categories, orders, returns and discount codes.
+
+The stack is React 19 with Vite and React Router, an Express 5 REST API, MongoDB with Mongoose, Stripe and Nodemailer, deployed on Vercel with MongoDB Atlas. The project includes more than ninety automated tests, a responsive layout for phones, tablets and desktops, and accessibility details such as keyboard-friendly dialogs and charts.
 
 **Live site:** https://moore-supermarket.vercel.app (deployed on Vercel; every push to `main` redeploys automatically)
+
+## Screenshots
+
+> Screenshots use the built-in sample catalogue and made-up demo shoppers.
+
+| Storefront | Shop & filters |
+|---|---|
+| ![Moore Supermarket homepage](docs/screenshots/home.png) | ![All products with filters](docs/screenshots/shop.png) |
+| **Product page:** sizes, live stock and quantity | **Added to cart:** continue shopping or proceed to checkout |
+| ![Product details](docs/screenshots/product.png) | ![Added to cart window](docs/screenshots/added-to-cart.png) |
+| **Cart** | **Checkout:** delivery or pickup, discount codes, Stripe |
+| ![Shopping cart](docs/screenshots/cart.png) | ![Checkout](docs/screenshots/checkout.png) |
+
+| Admin dashboard | Sales report |
+|---|---|
+| ![Admin dashboard](docs/screenshots/admin-dashboard.png) | ![Sales report](docs/screenshots/admin-sales.png) |
+| **Inventory:** stock, days of cover, history | **Orders:** status, returns, refunds |
+| ![Inventory](docs/screenshots/admin-inventory.png) | ![Order details](docs/screenshots/admin-orders.png) |
+
+| Mobile: home | Mobile: product |
+|---|---|
+| <img src="docs/screenshots/mobile-home.png" alt="Homepage on a phone" width="300"> | <img src="docs/screenshots/mobile-product.png" alt="Product page on a phone" width="300"> |
 
 ### Deploying on Vercel
 The repo includes `vercel.json` and a serverless entry point (`api/index.js`). The React app is served as static files and `/api/*` runs the Express API as a Vercel Function. Set these in Vercel → Settings → Environment Variables:
